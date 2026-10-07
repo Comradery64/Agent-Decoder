@@ -1,10 +1,19 @@
 # Changelog
 
-All notable changes to Clau-Decode will be documented in this file.
+All notable changes to Agent Decoder (formerly Clau-Decode) will be documented in this file.
 
 The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). While the project is in the 0.x series, breaking changes may land in any minor release; we'll call them out clearly.
 
 ## [Unreleased]
+
+### Changed
+
+- Renamed the project to **Agent Decoder R.I.N.G.** (Replay, Inspect, Navigate, Grep). The launcher is now `ring`; the `clau-decode` command is removed and the Python module is now `agent_decoder`.
+- Config and index DB live in `agent-decoder/` dirs. Existing `clau-decode/` data is copied over on first run and left in place as a backup.
+
+### Added
+
+- Search query language: `"exact phrase"`, `-exclude`, `a OR b`, `prefix*`, and `role:` / `project:` / `session:` / `before:` / `after:` filters.
 
 ## [0.3.2] - 2026-09-07
 
