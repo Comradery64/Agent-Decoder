@@ -27,6 +27,6 @@ run:
 # Clean build artifacts
 clean:
 	rm -rf frontend/node_modules frontend/dist
-	rm -rf src/clau_decode/static/assets src/clau_decode/static/index.html
+	rm -rf src/agent_decoder/static/assets src/agent_decoder/static/index.html
 	rm -rf .pytest_cache
 	find . -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

@@ -12,7 +12,7 @@ the real target binary. From here on the child is fully detached and runs
 under its own session with the slave as its controlling TTY.
 
 Usage:
-    python3 -m clau_decode._pty_preexec <bin_name> [args...]
+    python3 -m agent_decoder._pty_preexec <bin_name> [args...]
 
 The first argv after the module name is the target binary; remaining args
 are forwarded.

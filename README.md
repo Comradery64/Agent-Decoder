@@ -1,7 +1,12 @@
-<h1 align="center">Clau-Decode</h1>
+<h1 align="center">Agent Decoder R.I.N.G.</h1>
 
 <p align="center">
-  <em>Browse, search, and analyze your AI coding assistant chat history — entirely local, entirely private.</em>
+  <strong>Replay, Inspect, Navigate, Grep.</strong><br>
+  <em>Decode your agents' secret messages. "Send 10¢ and a box top!"</em>
+</p>
+
+<p align="center">
+  Browse, search, and analyze your AI coding assistant chat history — entirely local, entirely private.
 </p>
 
 <p align="center">
@@ -52,7 +57,7 @@ uv tool install git+https://github.com/Comradery64/Clau-Decode.git
 # or:
 pipx install git+https://github.com/Comradery64/Clau-Decode.git
 
-clau-decode                 # opens http://localhost:4242
+ring                 # opens http://localhost:4242
 
 # update later — re-pull the latest from main (git installs need --force;
 # plain `upgrade`/`reinstall` won't fetch new commits):
@@ -63,7 +68,7 @@ pipx install --force git+https://github.com/Comradery64/Clau-Decode.git
 
 Requires Python 3.10+. The wheel ships the pre-built frontend, so **no Node.js is needed** — only for development. All data stays on your machine — no telemetry.
 
-> Just trying it out? Run without installing: `uvx --from git+https://github.com/Comradery64/Clau-Decode.git clau-decode`
+> Just trying it out? Run without installing: `uvx --from git+https://github.com/Comradery64/Clau-Decode.git ring`
 > Prefer not to install? Run it straight from a clone — see [Development](#development).
 > Advanced: `pip install` works too, but only **inside an activated virtualenv** — never your system/Homebrew Python (PEP 668 will block it, and a global install can shadow other checkouts).
 
@@ -172,11 +177,11 @@ git fetch origin && git reset --hard origin/main
 
 | Command | Description |
 |---------|-------------|
-| `clau-decode` | Launch the web UI (default) |
-| `clau-decode scan` | Rescan and print summary |
-| `clau-decode today` | Show today's token usage and cost |
-| `clau-decode stats` | Print statistical metrics |
-| `clau-decode tips` | Print optimization tips |
+| `ring` | Launch the web UI (default) |
+| `ring scan` | Rescan and print summary |
+| `ring today` | Show today's token usage and cost |
+| `ring stats` | Print statistical metrics |
+| `ring tips` | Print optimization tips |
 
 ### Keyboard shortcuts
 
@@ -234,7 +239,7 @@ make dev                      # = uv sync && build frontend
 # checkout (no global install, no shadowing):
 uv run clau-decode --no-open
 # equivalently, as a module from the checkout root:
-uv run python -m clau_decode --no-open
+uv run python -m agent_decoder --no-open
 # (make run wraps this)
 
 # Run tests

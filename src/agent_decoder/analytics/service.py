@@ -1,5 +1,5 @@
 from __future__ import annotations
-from clau_decode.models import Message
+from agent_decoder.models import Message
 from .aggregator import DailyAggregator, SessionAggregator
 from .extractor import TokenExtractor
 from .models import DailyBucket, PromptCost, TokenBreakdown

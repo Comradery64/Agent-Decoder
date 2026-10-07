@@ -24,9 +24,9 @@ from typing import AsyncIterator
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from clau_decode.db import Database
-from clau_decode.locks import _lock_path_for
-from clau_decode.models import AppConfig, Project, Session
+from agent_decoder.db import Database
+from agent_decoder.locks import _lock_path_for
+from agent_decoder.models import AppConfig, Project, Session
 
 
 FAKE = Path(__file__).parent / "fixtures" / "fake_claude_tui.py"
@@ -84,7 +84,7 @@ async def _seed_session(
 
 
 def _make_app(db_path: Path, config: AppConfig):
-    from clau_decode.server import create_app
+    from agent_decoder.server import create_app
 
     return create_app(config, db_path)
 

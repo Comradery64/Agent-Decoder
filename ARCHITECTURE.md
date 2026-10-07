@@ -63,11 +63,11 @@ flowchart LR
 2. The frontend router (`frontend/src/router.ts`) updates the URL hash to
    `#/chat/<session_id>` and `App.tsx` reacts to the route change.
 3. `frontend/src/api/client.ts` issues `GET /api/sessions/<session_id>`.
-4. The FastAPI route (`src/clau_decode/server.py`) calls `Database.get_session_detail`
-   (`src/clau_decode/db.py`), which reads the session row and its messages
+4. The FastAPI route (`src/agent_decoder/server.py`) calls `Database.get_session_detail`
+   (`src/agent_decoder/db.py`), which reads the session row and its messages
    from SQLite.
 5. If the JSONL file's mtime has changed since the last index update, the
-   server re-parses the file via `parse_session` (`src/clau_decode/parser.py`)
+   server re-parses the file via `parse_session` (`src/agent_decoder/parser.py`)
    and upserts the new messages back into SQLite before returning.
 6. The route returns a `SessionDetail` JSON document; the React `ChatView`
    component renders markdown, tool-use, thinking, and sidechain blocks.
@@ -77,7 +77,7 @@ flowchart LR
 
 ## Key directories
 
-### Backend — `src/clau_decode/`
+### Backend — `src/agent_decoder/`
 
 | Path | Role |
 |------|------|

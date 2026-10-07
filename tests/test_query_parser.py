@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from clau_decode.db import Database
-from clau_decode.query_parser import parse_query
+from agent_decoder.db import Database
+from agent_decoder.query_parser import parse_query
 from tests.test_search_ephemeral import _seed_message, _seed_session
 
 

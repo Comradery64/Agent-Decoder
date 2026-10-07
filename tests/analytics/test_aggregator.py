@@ -1,6 +1,6 @@
 """Tests for SessionAggregator and DailyAggregator."""
 
-from clau_decode.models import Message, TokenUsage
+from agent_decoder.models import Message, TokenUsage
 
 
 def _asst(id: str, input: int, output: int) -> Message:
@@ -14,8 +14,8 @@ def _asst(id: str, input: int, output: int) -> Message:
 
 class TestSessionAggregator:
     def test_aggregates_all_messages(self):
-        from clau_decode.analytics.aggregator import SessionAggregator
-        from clau_decode.analytics.extractor import TokenExtractor
+        from agent_decoder.analytics.aggregator import SessionAggregator
+        from agent_decoder.analytics.extractor import TokenExtractor
 
         agg = SessionAggregator(TokenExtractor())
         messages = [_asst("m1", 10, 5), _asst("m2", 20, 3)]
@@ -24,8 +24,8 @@ class TestSessionAggregator:
         assert bd.output_tokens == 8
 
     def test_aggregator_uses_dedup(self):
-        from clau_decode.analytics.aggregator import SessionAggregator
-        from clau_decode.analytics.extractor import TokenExtractor
+        from agent_decoder.analytics.aggregator import SessionAggregator
+        from agent_decoder.analytics.extractor import TokenExtractor
 
         agg = SessionAggregator(TokenExtractor())
         msg = _asst("dup", 10, 5)
@@ -33,16 +33,16 @@ class TestSessionAggregator:
         assert bd.input_tokens == 10  # counted once
 
     def test_empty_message_list_returns_zero(self):
-        from clau_decode.analytics.aggregator import SessionAggregator
-        from clau_decode.analytics.extractor import TokenExtractor
+        from agent_decoder.analytics.aggregator import SessionAggregator
+        from agent_decoder.analytics.extractor import TokenExtractor
 
         agg = SessionAggregator(TokenExtractor())
         bd = agg.aggregate([])
         assert bd.total == 0
 
     def test_user_messages_contribute_zero(self):
-        from clau_decode.analytics.aggregator import SessionAggregator
-        from clau_decode.analytics.extractor import TokenExtractor
+        from agent_decoder.analytics.aggregator import SessionAggregator
+        from agent_decoder.analytics.extractor import TokenExtractor
 
         agg = SessionAggregator(TokenExtractor())
         user = Message(id="u1", session_id="s1", role="user")
@@ -66,8 +66,8 @@ def _asst_with_ts(id: str, input: int, output: int, ts: datetime) -> Message:
 
 class TestDailyAggregator:
     def test_groups_by_utc_day(self):
-        from clau_decode.analytics.aggregator import DailyAggregator
-        from clau_decode.analytics.extractor import TokenExtractor
+        from agent_decoder.analytics.aggregator import DailyAggregator
+        from agent_decoder.analytics.extractor import TokenExtractor
 
         agg = DailyAggregator(TokenExtractor())
         messages = [
@@ -88,8 +88,8 @@ class TestDailyAggregator:
         assert jan2.breakdown.input_tokens == 50
 
     def test_messages_without_timestamp_are_ignored(self):
-        from clau_decode.analytics.aggregator import DailyAggregator
-        from clau_decode.analytics.extractor import TokenExtractor
+        from agent_decoder.analytics.aggregator import DailyAggregator
+        from agent_decoder.analytics.extractor import TokenExtractor
 
         agg = DailyAggregator(TokenExtractor())
         msg = _asst("no-ts", 10, 5)  # no timestamp
@@ -97,8 +97,8 @@ class TestDailyAggregator:
         assert buckets == []
 
     def test_buckets_are_chronologically_ordered(self):
-        from clau_decode.analytics.aggregator import DailyAggregator
-        from clau_decode.analytics.extractor import TokenExtractor
+        from agent_decoder.analytics.aggregator import DailyAggregator
+        from agent_decoder.analytics.extractor import TokenExtractor
 
         agg = DailyAggregator(TokenExtractor())
         messages = [
@@ -109,8 +109,8 @@ class TestDailyAggregator:
         assert buckets[0].day < buckets[1].day
 
     def test_session_count_increments(self):
-        from clau_decode.analytics.aggregator import DailyAggregator
-        from clau_decode.analytics.extractor import TokenExtractor
+        from agent_decoder.analytics.aggregator import DailyAggregator
+        from agent_decoder.analytics.extractor import TokenExtractor
 
         agg = DailyAggregator(TokenExtractor())
         ts = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
@@ -135,8 +135,8 @@ class TestDailyAggregator:
         assert buckets[0].session_count == 2
 
     def test_prompt_count_counts_pairs(self):
-        from clau_decode.analytics.aggregator import DailyAggregator
-        from clau_decode.analytics.extractor import TokenExtractor
+        from agent_decoder.analytics.aggregator import DailyAggregator
+        from agent_decoder.analytics.extractor import TokenExtractor
 
         agg = DailyAggregator(TokenExtractor())
         ts = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)

@@ -354,7 +354,7 @@ def _set_winsize(fd: int, rows: int, cols: int) -> None:
 
 
 # The controlling-TTY claim (setsid + TIOCSCTTY) happens in the spawned
-# wrapper process at ``clau_decode/_pty_preexec.py`` — we cannot use
+# wrapper process at ``agent_decoder/_pty_preexec.py`` — we cannot use
 # ``preexec_fn`` because uvloop's subprocess implementation refuses to run
 # it. See that module's docstring for the full rationale.
 
@@ -535,7 +535,7 @@ class PtyChannel:
             wrapper_argv = [
                 sys.executable,
                 "-m",
-                "clau_decode._pty_preexec",
+                "agent_decoder._pty_preexec",
                 *self._argv,
             ]
             proc = await asyncio.create_subprocess_exec(

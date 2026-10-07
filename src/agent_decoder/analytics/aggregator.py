@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import date, timezone
-from clau_decode.models import Message
+from agent_decoder.models import Message
 from .extractor import DeduplicatingExtractor, TokenExtractor
 from .models import DailyBucket, TokenBreakdown
 

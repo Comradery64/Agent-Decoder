@@ -3,10 +3,10 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from clau_decode.analytics.cost import SessionCost
-from clau_decode.analytics.models import TokenBreakdown
-from clau_decode.analytics.pricing import ModelPricing
-from clau_decode.models import Message, SessionDetail, TextBlock, TokenUsage
+from agent_decoder.analytics.cost import SessionCost
+from agent_decoder.analytics.models import TokenBreakdown
+from agent_decoder.analytics.pricing import ModelPricing
+from agent_decoder.models import Message, SessionDetail, TextBlock, TokenUsage
 
 
 def _make_session_detail(
@@ -68,7 +68,7 @@ def _make_cost() -> SessionCost:
 
 class TestExportJson:
     def test_basic_export_structure(self):
-        from clau_decode.reporter import export_json
+        from agent_decoder.reporter import export_json
 
         detail = _make_session_detail()
         result = export_json(detail)
@@ -83,7 +83,7 @@ class TestExportJson:
         assert len(result["messages"]) == 2
 
     def test_messages_include_text_and_usage(self):
-        from clau_decode.reporter import export_json
+        from agent_decoder.reporter import export_json
 
         detail = _make_session_detail()
         result = export_json(detail)
@@ -100,7 +100,7 @@ class TestExportJson:
         assert asst_msg["usage"]["output_tokens"] == 5
 
     def test_export_with_cost(self):
-        from clau_decode.reporter import export_json
+        from agent_decoder.reporter import export_json
 
         detail = _make_session_detail()
         cost = _make_cost()
@@ -112,14 +112,14 @@ class TestExportJson:
         assert result["cost"]["pricing_known"] is True
 
     def test_export_without_cost_has_no_cost_key(self):
-        from clau_decode.reporter import export_json
+        from agent_decoder.reporter import export_json
 
         detail = _make_session_detail()
         result = export_json(detail)
         assert "cost" not in result
 
     def test_export_with_prompts(self):
-        from clau_decode.reporter import export_json
+        from agent_decoder.reporter import export_json
 
         detail = _make_session_detail()
         prompts = [
@@ -142,7 +142,7 @@ class TestExportJson:
 
     def test_export_serializable_to_json(self):
         import json
-        from clau_decode.reporter import export_json
+        from agent_decoder.reporter import export_json
 
         detail = _make_session_detail()
         cost = _make_cost()
@@ -155,7 +155,7 @@ class TestExportJson:
 
 class TestExportMarkdown:
     def test_basic_markdown_has_title_and_summary(self):
-        from clau_decode.reporter import export_markdown
+        from agent_decoder.reporter import export_markdown
 
         detail = _make_session_detail()
         md = export_markdown(detail)
@@ -167,7 +167,7 @@ class TestExportMarkdown:
         assert "15" in md  # total tokens (10+5)
 
     def test_markdown_includes_token_breakdown(self):
-        from clau_decode.reporter import export_markdown
+        from agent_decoder.reporter import export_markdown
 
         detail = _make_session_detail()
         md = export_markdown(detail)
@@ -176,7 +176,7 @@ class TestExportMarkdown:
         assert "Output: 5" in md
 
     def test_markdown_with_cost(self):
-        from clau_decode.reporter import export_markdown
+        from agent_decoder.reporter import export_markdown
 
         detail = _make_session_detail()
         cost = _make_cost()
@@ -186,7 +186,7 @@ class TestExportMarkdown:
         assert "$0.0001" in md
 
     def test_markdown_with_pricing_table(self):
-        from clau_decode.reporter import export_markdown
+        from agent_decoder.reporter import export_markdown
 
         detail = _make_session_detail()
         pricing = ModelPricing(
@@ -204,7 +204,7 @@ class TestExportMarkdown:
         assert "$0.30" in md
 
     def test_markdown_with_model_usage(self):
-        from clau_decode.reporter import export_markdown
+        from agent_decoder.reporter import export_markdown
 
         detail = _make_session_detail()
         usage = [
@@ -223,7 +223,7 @@ class TestExportMarkdown:
         assert "150" in md
 
     def test_markdown_with_prompts(self):
-        from clau_decode.reporter import export_markdown
+        from agent_decoder.reporter import export_markdown
 
         detail = _make_session_detail()
         prompts = [
@@ -244,7 +244,7 @@ class TestExportMarkdown:
         assert "## Prompt Breakdown" in md
 
     def test_markdown_conversation_log(self):
-        from clau_decode.reporter import export_markdown
+        from agent_decoder.reporter import export_markdown
 
         detail = _make_session_detail()
         md = export_markdown(detail)
@@ -256,7 +256,7 @@ class TestExportMarkdown:
         assert "Hi there" in md
 
     def test_markdown_meta_messages_excluded(self):
-        from clau_decode.reporter import export_markdown
+        from agent_decoder.reporter import export_markdown
 
         messages = [
             Message(
@@ -285,9 +285,9 @@ class TestExportRoutes:
 
     async def _make_client(self):
         from httpx import AsyncClient, ASGITransport
-        from clau_decode.server import create_app
-        from clau_decode.config import AppConfig
-        from clau_decode.db import Database
+        from agent_decoder.server import create_app
+        from agent_decoder.config import AppConfig
+        from agent_decoder.db import Database
         from pathlib import Path
         import tempfile
 
@@ -324,11 +324,11 @@ class TestExportRoutes:
         from pathlib import Path
         import tempfile
         from httpx import AsyncClient, ASGITransport
-        from clau_decode.server import create_app
-        from clau_decode.config import AppConfig
-        from clau_decode.db import Database
-        from clau_decode.parser import parse_session
-        from clau_decode.models import Project
+        from agent_decoder.server import create_app
+        from agent_decoder.config import AppConfig
+        from agent_decoder.db import Database
+        from agent_decoder.parser import parse_session
+        from agent_decoder.models import Project
 
         FIXTURES = Path(__file__).parent / "fixtures"
         USAGE_JSONL = FIXTURES / "session_with_usage.jsonl"
@@ -372,11 +372,11 @@ class TestExportRoutes:
         from pathlib import Path
         import tempfile
         from httpx import AsyncClient, ASGITransport
-        from clau_decode.server import create_app
-        from clau_decode.config import AppConfig
-        from clau_decode.db import Database
-        from clau_decode.parser import parse_session
-        from clau_decode.models import Project
+        from agent_decoder.server import create_app
+        from agent_decoder.config import AppConfig
+        from agent_decoder.db import Database
+        from agent_decoder.parser import parse_session
+        from agent_decoder.models import Project
 
         FIXTURES = Path(__file__).parent / "fixtures"
         USAGE_JSONL = FIXTURES / "session_with_usage.jsonl"

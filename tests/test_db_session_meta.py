@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from clau_decode.db import Database
-from clau_decode.models import Project, Session
+from agent_decoder.db import Database
+from agent_decoder.models import Project, Session
 
 
 @pytest.fixture

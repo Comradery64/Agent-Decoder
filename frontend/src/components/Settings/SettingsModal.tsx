@@ -47,7 +47,7 @@ export default function SettingsModal() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [category, setCategory] = useState<CategoryId>("general");
   // Version + platform for the About panel. Fetched lazily when About opens.
-  // The version is the backend's single source of truth (clau_decode.__version__)
+  // The version is the backend's single source of truth (agent_decoder.__version__)
   // surfaced via /api/host-info — there is no version string in the frontend.
   const [hostInfo, setHostInfo] = useState<HostInfo | null>(null);
   // Best-effort PyPI check (see api.getUpdateCheck) — null while loading or

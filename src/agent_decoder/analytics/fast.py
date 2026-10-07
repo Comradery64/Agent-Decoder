@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from clau_decode.models import Message, TokenUsage, ToolResultBlock, ToolUseBlock
+from agent_decoder.models import Message, TokenUsage, ToolResultBlock, ToolUseBlock
 
 from .stats import compute_stats
 from .tips import (

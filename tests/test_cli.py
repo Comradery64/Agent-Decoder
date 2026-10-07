@@ -6,8 +6,8 @@ from datetime import date
 
 import pytest
 
-from clau_decode.cli import _build_parser, _resolve_host
-from clau_decode.config import load_config
+from agent_decoder.cli import _build_parser, _resolve_host
+from agent_decoder.config import load_config
 
 
 # ---------------------------------------------------------------------------
@@ -121,8 +121,8 @@ class TestForceRefresh:
 
     @pytest.mark.asyncio
     async def test_force_refresh_clears_mtimes(self, db_path):
-        from clau_decode.db import Database
-        from clau_decode.models import Project, Session
+        from agent_decoder.db import Database
+        from agent_decoder.models import Project, Session
 
         async with Database(db_path) as db:
             await db.init_schema()
@@ -141,7 +141,7 @@ class TestForceRefresh:
             mtime = await db.get_session_mtime("s1")
             assert mtime == 12345.0
 
-        from clau_decode.cli import _force_refresh
+        from agent_decoder.cli import _force_refresh
 
         await _force_refresh(db_path)
 
@@ -157,7 +157,7 @@ class TestForceRefresh:
 
 class TestScanCommand:
     def test_scan_runs_without_error(self, capsys):
-        from clau_decode.cli import _run_scan
+        from agent_decoder.cli import _run_scan
 
         config = load_config()
         args = _build_parser().parse_args(["scan"])
@@ -173,7 +173,7 @@ class TestScanCommand:
 
 class TestTodayCommand:
     def test_today_runs_without_error(self, capsys):
-        from clau_decode.cli import _run_today
+        from agent_decoder.cli import _run_today
 
         config = load_config()
         args = _build_parser().parse_args(["today"])
@@ -190,7 +190,7 @@ class TestTodayCommand:
 
 class TestStatsCommand:
     def test_stats_runs_without_error(self, capsys):
-        from clau_decode.cli import _run_stats
+        from agent_decoder.cli import _run_stats
 
         config = load_config()
         args = _build_parser().parse_args(["stats"])
@@ -206,7 +206,7 @@ class TestStatsCommand:
 
 class TestTipsCommand:
     def test_tips_runs_without_error(self, capsys):
-        from clau_decode.cli import _run_tips
+        from agent_decoder.cli import _run_tips
 
         config = load_config()
         args = _build_parser().parse_args(["tips"])
@@ -224,7 +224,7 @@ class TestTipsCommand:
 class TestDbHelpers:
     @pytest.mark.asyncio
     async def test_execute_and_commit(self, tmp_path):
-        from clau_decode.db import Database
+        from agent_decoder.db import Database
 
         db_path = tmp_path / "test.db"
         async with Database(db_path) as db:

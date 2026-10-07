@@ -1,4 +1,4 @@
-"""Tests for ``clau_decode.drivers`` — base/registry pure units plus tmux
+"""Tests for ``agent_decoder.drivers`` — base/registry pure units plus tmux
 mechanics against a deterministic fake CLI.
 
 Layering of skips (so CI without tmux just skips the integration block):
@@ -20,7 +20,7 @@ import uuid
 
 import pytest
 
-from clau_decode.drivers import (
+from agent_decoder.drivers import (
     DriverAvailability,
     DriverState,
     TmuxDriver,
@@ -29,8 +29,8 @@ from clau_decode.drivers import (
     codex_spawn_builder,
     supports_driving,
 )
-from clau_decode.drivers import registry as drv_registry
-from clau_decode.drivers import tmux_driver as tmux_mod
+from agent_decoder.drivers import registry as drv_registry
+from agent_decoder.drivers import tmux_driver as tmux_mod
 
 _HAS_TMUX = shutil.which("tmux") is not None
 _HAS_CODEX = shutil.which("codex") is not None

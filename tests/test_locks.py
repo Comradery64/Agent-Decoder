@@ -1,4 +1,4 @@
-"""Tests for ``clau_decode.locks`` — Phase-1 lock sidecar.
+"""Tests for ``agent_decoder.locks`` — Phase-1 lock sidecar.
 
 Covers:
   - acquire/release happy path (file appears, file disappears).
@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from clau_decode.locks import (
+from agent_decoder.locks import (
     HEARTBEAT_INTERVAL_S,
     STALE_AFTER_S,
     LockAlreadyHeld,

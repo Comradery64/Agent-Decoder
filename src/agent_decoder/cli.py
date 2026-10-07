@@ -41,7 +41,7 @@ from .server import create_app
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="clau-decode",
+        prog="ring",
         description="Local web viewer and analytics for AI coding assistant chat history",
     )
     parser.add_argument(
@@ -101,7 +101,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--log-level",
         choices=("debug", "info", "warning", "error"),
         default="info",
-        help="Verbosity for clau_decode loggers (independent of uvicorn). "
+        help="Verbosity for agent_decoder loggers (independent of uvicorn). "
         "Default 'info' surfaces operational signals (PTY runner warnings, "
         "/btw finalize/timeout, ephemeral persistence). Use 'debug' when "
         "diagnosing a live issue.",
@@ -168,8 +168,8 @@ def _resolve_host(args: argparse.Namespace, config=None) -> str:
     return "127.0.0.1"
 
 
-def _configure_clau_decode_logging(level_name: str) -> None:
-    """Attach an explicit stderr handler to the ``clau_decode`` logger.
+def _configure_agent_decoder_logging(level_name: str) -> None:
+    """Attach an explicit stderr handler to the ``agent_decoder`` logger.
 
     Uvicorn's default ``log_config`` reconfigures Python logging when
     ``uvicorn.run`` is invoked, which drops the implicit ``lastResort``
@@ -195,28 +195,28 @@ def _configure_clau_decode_logging(level_name: str) -> None:
     except Exception:
         pass
     level = getattr(_logging, level_name.upper(), _logging.INFO)
-    logger = _logging.getLogger("clau_decode")
+    logger = _logging.getLogger("agent_decoder")
     logger.setLevel(level)
     if not any(
         isinstance(h, _logging.StreamHandler)
-        and getattr(h, "_clau_decode_attached", False)
+        and getattr(h, "_agent_decoder_attached", False)
         for h in logger.handlers
     ):
         handler = _logging.StreamHandler(sys.stderr)
         handler.setFormatter(
             _logging.Formatter("%(asctime)s %(name)s %(levelname)s %(message)s")
         )
-        handler._clau_decode_attached = True  # type: ignore[attr-defined]
+        handler._agent_decoder_attached = True  # type: ignore[attr-defined]
         logger.addHandler(handler)
     logger.propagate = False
 
 
 def _run_dashboard(args: argparse.Namespace, config) -> None:
     """Launch the web UI with uvicorn."""
-    _configure_clau_decode_logging(args.log_level)
+    _configure_agent_decoder_logging(args.log_level)
     import logging as _logging
 
-    _logging.getLogger("clau_decode").info(
+    _logging.getLogger("agent_decoder").info(
         "logger configured (level=%s)", args.log_level
     )
     host = _resolve_host(args, config)

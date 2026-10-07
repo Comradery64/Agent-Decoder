@@ -15,11 +15,11 @@ import uuid
 
 import pytest
 
-from clau_decode.db import Database
-from clau_decode.driver_manager import DriverManager
-from clau_decode.drivers import DriverState, TmuxDriver
-from clau_decode.events_bus import EventBroadcaster
-from clau_decode import driver_manager as dm_mod
+from agent_decoder.db import Database
+from agent_decoder.driver_manager import DriverManager
+from agent_decoder.drivers import DriverState, TmuxDriver
+from agent_decoder.events_bus import EventBroadcaster
+from agent_decoder import driver_manager as dm_mod
 
 import shutil
 import subprocess

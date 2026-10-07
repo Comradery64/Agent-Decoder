@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 
-from clau_decode import migrate
+from agent_decoder import migrate
 
 
 # ---------------------------------------------------------------------------

@@ -13,8 +13,8 @@ from pathlib import Path
 
 from httpx import ASGITransport, AsyncClient
 
-from clau_decode.db import Database
-from clau_decode.models import AppConfig, Message, Project, Session, TextBlock
+from agent_decoder.db import Database
+from agent_decoder.models import AppConfig, Message, Project, Session, TextBlock
 
 
 # ---------------------------------------------------------------------------
@@ -118,7 +118,7 @@ async def test_delete_session_missing_returns_false(tmp_path) -> None:
 
 
 def _make_app(db_path: Path, config: AppConfig):
-    from clau_decode.server import create_app
+    from agent_decoder.server import create_app
 
     return create_app(config, db_path)
 

@@ -14,22 +14,22 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from clau_decode.analytics import fast
-from clau_decode.analytics.service import TokenAnalyticsService
-from clau_decode.analytics.stats import (
+from agent_decoder.analytics import fast
+from agent_decoder.analytics.service import TokenAnalyticsService
+from agent_decoder.analytics.stats import (
     FileTouchScanner,
     ModelUsageScanner,
     PromptStatsScanner,
     ToolUsageScanner,
 )
-from clau_decode.analytics.tips import (
+from agent_decoder.analytics.tips import (
     LowCacheHitRule,
     OversizedToolResultRule,
     RepeatedFileReadRule,
     TipRegistry,
 )
-from clau_decode.db import Database
-from clau_decode.models import (
+from agent_decoder.db import Database
+from agent_decoder.models import (
     Message,
     TokenUsage,
     ToolResultBlock,

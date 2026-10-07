@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 class TestModelPricing:
     def test_defaults_to_zero(self):
-        from clau_decode.analytics.pricing import ModelPricing
+        from agent_decoder.analytics.pricing import ModelPricing
 
         p = ModelPricing()
         assert p.input_per_mtok == Decimal("0")
@@ -17,8 +17,8 @@ class TestModelPricing:
         assert p.cache_read_per_mtok == Decimal("0")
 
     def test_cost_for_breakdown_exact(self):
-        from clau_decode.analytics.models import TokenBreakdown
-        from clau_decode.analytics.pricing import ModelPricing
+        from agent_decoder.analytics.models import TokenBreakdown
+        from agent_decoder.analytics.pricing import ModelPricing
 
         p = ModelPricing(
             input_per_mtok=Decimal("3.00"),
@@ -36,8 +36,8 @@ class TestModelPricing:
         assert cost == Decimal("22.05")  # 3 + 15 + 3.75 + 0.30
 
     def test_cost_is_zero_for_empty_breakdown(self):
-        from clau_decode.analytics.models import TokenBreakdown
-        from clau_decode.analytics.pricing import ModelPricing
+        from agent_decoder.analytics.models import TokenBreakdown
+        from agent_decoder.analytics.pricing import ModelPricing
 
         p = ModelPricing(
             input_per_mtok=Decimal("3.00"),
@@ -47,8 +47,8 @@ class TestModelPricing:
         assert cost == Decimal("0")
 
     def test_cost_scales_correctly_for_small_counts(self):
-        from clau_decode.analytics.models import TokenBreakdown
-        from clau_decode.analytics.pricing import ModelPricing
+        from agent_decoder.analytics.models import TokenBreakdown
+        from agent_decoder.analytics.pricing import ModelPricing
 
         p = ModelPricing(
             input_per_mtok=Decimal("3.00"), output_per_mtok=Decimal("15.00")
@@ -61,7 +61,7 @@ class TestModelPricing:
 
 class TestHardcodedPricingStrategy:
     def test_knows_sonnet_46(self):
-        from clau_decode.analytics.pricing import HardcodedPricingStrategy
+        from agent_decoder.analytics.pricing import HardcodedPricingStrategy
 
         strat = HardcodedPricingStrategy()
         p = strat.get_pricing("claude-sonnet-4-6")
@@ -70,7 +70,7 @@ class TestHardcodedPricingStrategy:
         assert p.output_per_mtok == Decimal("15.00")
 
     def test_knows_haiku_45(self):
-        from clau_decode.analytics.pricing import HardcodedPricingStrategy
+        from agent_decoder.analytics.pricing import HardcodedPricingStrategy
 
         strat = HardcodedPricingStrategy()
         p = strat.get_pricing("claude-haiku-4-5-20251001")
@@ -79,7 +79,7 @@ class TestHardcodedPricingStrategy:
         assert p.output_per_mtok == Decimal("5.00")
 
     def test_knows_opus_47(self):
-        from clau_decode.analytics.pricing import HardcodedPricingStrategy
+        from agent_decoder.analytics.pricing import HardcodedPricingStrategy
 
         strat = HardcodedPricingStrategy()
         p = strat.get_pricing("claude-opus-4-7")
@@ -88,7 +88,7 @@ class TestHardcodedPricingStrategy:
         assert p.output_per_mtok == Decimal("25.00")
 
     def test_knows_current_lineup(self):
-        from clau_decode.analytics.pricing import HardcodedPricingStrategy
+        from agent_decoder.analytics.pricing import HardcodedPricingStrategy
 
         strat = HardcodedPricingStrategy()
         fable = strat.get_pricing("claude-fable-5")
@@ -107,13 +107,13 @@ class TestHardcodedPricingStrategy:
         assert sonnet.output_per_mtok == Decimal("15.00")
 
     def test_unknown_model_returns_none(self):
-        from clau_decode.analytics.pricing import HardcodedPricingStrategy
+        from agent_decoder.analytics.pricing import HardcodedPricingStrategy
 
         strat = HardcodedPricingStrategy()
         assert strat.get_pricing("gpt-4-turbo") is None
 
     def test_prefix_match_for_versioned_models(self):
-        from clau_decode.analytics.pricing import HardcodedPricingStrategy
+        from agent_decoder.analytics.pricing import HardcodedPricingStrategy
 
         strat = HardcodedPricingStrategy()
         p = strat.get_pricing("claude-sonnet-4-6-20250514")
@@ -123,7 +123,7 @@ class TestHardcodedPricingStrategy:
 
 class TestLiteLLMPricingFetcher:
     async def test_parses_litellm_json_format(self):
-        from clau_decode.analytics.pricing import LiteLLMPricingFetcher
+        from agent_decoder.analytics.pricing import LiteLLMPricingFetcher
 
         fake_data = {
             "claude-sonnet-4-6": {
@@ -164,7 +164,7 @@ class TestLiteLLMPricingFetcher:
 
     async def test_fetch_returns_empty_dict_on_http_error(self):
         import httpx as _httpx
-        from clau_decode.analytics.pricing import LiteLLMPricingFetcher
+        from agent_decoder.analytics.pricing import LiteLLMPricingFetcher
 
         with patch("httpx.AsyncClient") as mock_client_cls:
             mock_client = AsyncMock()
@@ -182,7 +182,7 @@ class TestLiteLLMPricingFetcher:
 
 class TestCachedPricingStrategy:
     async def test_returns_hardcoded_when_cache_empty(self):
-        from clau_decode.analytics.pricing import CachedPricingStrategy
+        from agent_decoder.analytics.pricing import CachedPricingStrategy
 
         strat = CachedPricingStrategy()
         p = strat.get_pricing("claude-sonnet-4-6")
@@ -190,7 +190,7 @@ class TestCachedPricingStrategy:
         assert p.input_per_mtok == Decimal("3.00")
 
     async def test_live_data_takes_precedence_over_hardcoded(self):
-        from clau_decode.analytics.pricing import CachedPricingStrategy, ModelPricing
+        from agent_decoder.analytics.pricing import CachedPricingStrategy, ModelPricing
 
         strat = CachedPricingStrategy()
         strat._cached_data = {
@@ -205,20 +205,20 @@ class TestCachedPricingStrategy:
         assert p.input_per_mtok == Decimal("2.50")
 
     async def test_unknown_model_returns_none(self):
-        from clau_decode.analytics.pricing import CachedPricingStrategy
+        from agent_decoder.analytics.pricing import CachedPricingStrategy
 
         strat = CachedPricingStrategy()
         assert strat.get_pricing("unknown-model-xyz") is None
 
     async def test_cache_is_stale_after_ttl(self):
-        from clau_decode.analytics.pricing import CachedPricingStrategy
+        from agent_decoder.analytics.pricing import CachedPricingStrategy
 
         strat = CachedPricingStrategy(ttl_seconds=0)
         strat._cache_fetched_at = time.monotonic() - 1
         assert strat._is_cache_stale()
 
     async def test_cache_is_fresh_within_ttl(self):
-        from clau_decode.analytics.pricing import CachedPricingStrategy
+        from agent_decoder.analytics.pricing import CachedPricingStrategy
 
         strat = CachedPricingStrategy(ttl_seconds=3600)
         strat._cache_fetched_at = time.monotonic()

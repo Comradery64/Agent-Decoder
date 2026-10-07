@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from clau_decode.db import Database
+from agent_decoder.db import Database
 
 
 # ---------------------------------------------------------------------------

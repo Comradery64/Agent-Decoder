@@ -5,9 +5,9 @@ from pathlib import Path
 
 from httpx import AsyncClient, ASGITransport
 
-from clau_decode.db import Database
-from clau_decode.models import Project
-from clau_decode.parser import parse_session
+from agent_decoder.db import Database
+from agent_decoder.models import Project
+from agent_decoder.parser import parse_session
 
 FIXTURE = Path(__file__).parent.parent / "fixtures" / "session_with_usage.jsonl"
 
@@ -31,8 +31,8 @@ async def _seed_db(db_path: Path) -> str:
 
 
 async def test_tokens_endpoint_returns_correct_totals():
-    from clau_decode.config import load_config
-    from clau_decode.server import create_app
+    from agent_decoder.config import load_config
+    from agent_decoder.server import create_app
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = Path(tmp) / "test.db"
@@ -53,8 +53,8 @@ async def test_tokens_endpoint_returns_correct_totals():
 
 async def test_phase2_cost_endpoint_returns_nonzero_for_known_model():
     """Parse usage fixture, call cost route, expect non-zero total for sonnet."""
-    from clau_decode.config import load_config
-    from clau_decode.server import create_app
+    from agent_decoder.config import load_config
+    from agent_decoder.server import create_app
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = Path(tmp) / "test.db"
@@ -73,8 +73,8 @@ async def test_phase2_cost_endpoint_returns_nonzero_for_known_model():
 
 
 async def test_phase2_pricing_table_contains_sonnet():
-    from clau_decode.config import load_config
-    from clau_decode.server import create_app
+    from agent_decoder.config import load_config
+    from agent_decoder.server import create_app
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = Path(tmp) / "test.db"
@@ -91,8 +91,8 @@ async def test_phase2_pricing_table_contains_sonnet():
 
 
 async def test_prompts_endpoint_returns_ranked_list():
-    from clau_decode.config import load_config
-    from clau_decode.server import create_app
+    from agent_decoder.config import load_config
+    from agent_decoder.server import create_app
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = Path(tmp) / "test.db"

@@ -236,7 +236,7 @@ export interface HostInfo {
   platform: "darwin" | "linux" | "win32" | string;
   client_host: string | null;
   // App version, sourced from the backend's single source of truth
-  // (clau_decode.__version__). Shown in Settings ▸ About.
+  // (agent_decoder.__version__). Shown in Settings ▸ About.
   version: string;
 }
 

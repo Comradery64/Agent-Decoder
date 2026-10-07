@@ -7,11 +7,11 @@
 #
 #   bash scripts/capture-move-bundle.sh [--bundle DIR]
 #
-# Equivalent to:  python3 src/clau_decode/migrate.py --capture [...]
+# Equivalent to:  python3 src/agent_decoder/migrate.py --capture [...]
 # Or, the fully guided one-command flow (auto-detects capture vs merge):
 #   clau-decode migrate      # installed
-#   python3 src/clau_decode/migrate.py   # install-free
+#   python3 src/agent_decoder/migrate.py   # install-free
 #
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec python3 "$SCRIPT_DIR/../src/clau_decode/migrate.py" --capture "$@"
+exec python3 "$SCRIPT_DIR/../src/agent_decoder/migrate.py" --capture "$@"

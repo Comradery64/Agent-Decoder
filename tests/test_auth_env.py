@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from clau_decode._auth_env import _subscription_env, spawn_env
+from agent_decoder._auth_env import _subscription_env, spawn_env
 
 
 def test_subscription_env_strips_session_identity(monkeypatch):
@@ -20,7 +20,7 @@ async def test_spawn_env_strips_session_identity_for_unknown_auth(monkeypatch):
     async def _fake_auth_method(_bin_name: str) -> str:
         return ""
 
-    monkeypatch.setattr("clau_decode._auth_env._bin_auth_method", _fake_auth_method)
+    monkeypatch.setattr("agent_decoder._auth_env._bin_auth_method", _fake_auth_method)
     env = await spawn_env("claude")
     assert "CLAUDE_CODE_CHILD_SESSION" not in env
 
@@ -32,6 +32,6 @@ async def test_spawn_env_strips_session_identity_for_claude_ai_auth(monkeypatch)
     async def _fake_auth_method(_bin_name: str) -> str:
         return "claude.ai"
 
-    monkeypatch.setattr("clau_decode._auth_env._bin_auth_method", _fake_auth_method)
+    monkeypatch.setattr("agent_decoder._auth_env._bin_auth_method", _fake_auth_method)
     env = await spawn_env("claude")
     assert "CLAUDE_CODE_CHILD_SESSION" not in env

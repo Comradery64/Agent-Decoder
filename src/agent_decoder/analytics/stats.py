@@ -3,7 +3,7 @@ import statistics
 from collections import Counter, defaultdict
 from typing import Any
 
-from clau_decode.models import Message, ToolUseBlock
+from agent_decoder.models import Message, ToolUseBlock
 from .extractor import TokenExtractor
 from .prompt import PromptIterator
 

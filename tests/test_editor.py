@@ -30,7 +30,7 @@ def _make_record(
 
 class TestBackupSession:
     def test_creates_backup_file(self, tmp_path):
-        from clau_decode.editor import backup_session
+        from agent_decoder.editor import backup_session
 
         src = tmp_path / "session.jsonl"
         src.write_text('{"type":"user"}\n', encoding="utf-8")
@@ -39,7 +39,7 @@ class TestBackupSession:
         assert backup.read_text() == src.read_text()
 
     def test_backup_name_contains_bak_and_jsonl_suffix(self, tmp_path):
-        from clau_decode.editor import backup_session
+        from agent_decoder.editor import backup_session
 
         src = tmp_path / "session.jsonl"
         src.write_text("{}\n", encoding="utf-8")
@@ -48,7 +48,7 @@ class TestBackupSession:
         assert backup.suffix == ".jsonl"
 
     def test_original_unchanged_after_backup(self, tmp_path):
-        from clau_decode.editor import backup_session
+        from agent_decoder.editor import backup_session
 
         src = tmp_path / "session.jsonl"
         original = '{"type":"user","uuid":"abc"}\n'
@@ -59,7 +59,7 @@ class TestBackupSession:
 
 class TestDeleteFromSession:
     def test_deletes_matching_uuid(self, tmp_path):
-        from clau_decode.editor import delete_from_session
+        from agent_decoder.editor import delete_from_session
 
         src = tmp_path / "s.jsonl"
         lines = [
@@ -75,7 +75,7 @@ class TestDeleteFromSession:
         assert remaining[0]["uuid"] == "bbb"
 
     def test_preserves_non_message_records(self, tmp_path):
-        from clau_decode.editor import delete_from_session
+        from agent_decoder.editor import delete_from_session
 
         src = tmp_path / "s.jsonl"
         meta = {"type": "custom-title", "customTitle": "My Session"}
@@ -89,7 +89,7 @@ class TestDeleteFromSession:
         assert remaining[0]["type"] == "custom-title"
 
     def test_noop_when_uuid_not_found(self, tmp_path):
-        from clau_decode.editor import delete_from_session
+        from agent_decoder.editor import delete_from_session
 
         src = tmp_path / "s.jsonl"
         lines = [_make_record("aaa", "user", "hello")]
@@ -101,7 +101,7 @@ class TestDeleteFromSession:
 
 class TestEditContentInSession:
     def test_replaces_content_in_matching_line(self, tmp_path):
-        from clau_decode.editor import edit_content_in_session
+        from agent_decoder.editor import edit_content_in_session
 
         src = tmp_path / "s.jsonl"
         lines = [_make_record("aaa", "user", "original text")]
@@ -112,7 +112,7 @@ class TestEditContentInSession:
         assert updated["message"]["content"] == new_blocks
 
     def test_preserves_all_other_fields_in_line(self, tmp_path):
-        from clau_decode.editor import edit_content_in_session
+        from agent_decoder.editor import edit_content_in_session
 
         src = tmp_path / "s.jsonl"
         lines = [_make_record("aaa", "user", "hello")]
@@ -124,7 +124,7 @@ class TestEditContentInSession:
         assert updated["type"] == "user"
 
     def test_noop_when_uuid_not_found(self, tmp_path):
-        from clau_decode.editor import edit_content_in_session
+        from agent_decoder.editor import edit_content_in_session
 
         src = tmp_path / "s.jsonl"
         lines = [_make_record("aaa", "user", "hello")]
@@ -147,8 +147,8 @@ class TestRoundTrip:
     """Prove parse → delete/edit → re-parse gives consistent results."""
 
     def test_delete_roundtrip(self, tmp_path):
-        from clau_decode.editor import delete_from_session
-        from clau_decode.parser import parse_session
+        from agent_decoder.editor import delete_from_session
+        from agent_decoder.parser import parse_session
 
         src = tmp_path / f"{_SESSION_UUID}.jsonl"
         _write_session_file(
@@ -164,9 +164,9 @@ class TestRoundTrip:
         assert messages[0].id == _MSG_UUID_2
 
     def test_edit_roundtrip(self, tmp_path):
-        from clau_decode.editor import edit_content_in_session
-        from clau_decode.models import TextBlock
-        from clau_decode.parser import parse_session
+        from agent_decoder.editor import edit_content_in_session
+        from agent_decoder.models import TextBlock
+        from agent_decoder.parser import parse_session
 
         src = tmp_path / f"{_SESSION_UUID}.jsonl"
         _write_session_file(src, [_make_record(_MSG_UUID_1, "user", "original")])
@@ -177,8 +177,8 @@ class TestRoundTrip:
         assert messages[0].content_blocks[0].text == "updated"
 
     def test_non_message_records_survive_delete(self, tmp_path):
-        from clau_decode.editor import delete_from_session
-        from clau_decode.parser import parse_session
+        from agent_decoder.editor import delete_from_session
+        from agent_decoder.parser import parse_session
 
         src = tmp_path / f"{_SESSION_UUID}.jsonl"
         _write_session_file(
@@ -204,7 +204,7 @@ class TestRoundTrip:
         import os
         import time
 
-        from clau_decode.editor import swap_session
+        from agent_decoder.editor import swap_session
 
         src = tmp_path / f"{_SESSION_UUID}.jsonl"
         _write_session_file(src, [_make_record(_MSG_UUID_1, "user", "original")])
@@ -236,7 +236,7 @@ class TestRoundTrip:
         import os
         import time
 
-        from clau_decode.editor import swap_session
+        from agent_decoder.editor import swap_session
 
         src = tmp_path / f"{_SESSION_UUID}.jsonl"
         _write_session_file(
@@ -258,8 +258,8 @@ class TestRoundTrip:
         )
 
     def test_backup_restore_roundtrip(self, tmp_path):
-        from clau_decode.editor import backup_session, delete_from_session
-        from clau_decode.parser import parse_session
+        from agent_decoder.editor import backup_session, delete_from_session
+        from agent_decoder.parser import parse_session
 
         src = tmp_path / f"{_SESSION_UUID}.jsonl"
         _write_session_file(

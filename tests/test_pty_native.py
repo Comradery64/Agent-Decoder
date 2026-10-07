@@ -1,4 +1,4 @@
-from clau_decode.pty_native import (
+from agent_decoder.pty_native import (
     decode_terminal_input,
     encode_pty_output_chunk,
 )

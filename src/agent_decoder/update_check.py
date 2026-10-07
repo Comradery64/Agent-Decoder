@@ -15,7 +15,7 @@ PYPI_JSON_URL_PREFIX = "https://pypi.org/pypi/"
 CHECK_TIMEOUT_S = 5.0
 
 # PyPI's project name, NOT the CLI command or Python package name (both stay
-# "clau-decode"/"clau_decode") — PyPI rejected "clau-decode" as too similar
+# "clau-decode"/"agent_decoder") — PyPI rejected "clau-decode" as too similar
 # to an existing project, so the published distribution is "agent-decoder".
 DEFAULT_PACKAGE = "agent-decoder"
 

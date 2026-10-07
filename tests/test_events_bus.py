@@ -11,7 +11,7 @@ import asyncio
 
 import pytest
 
-from clau_decode.events_bus import EventBroadcaster
+from agent_decoder.events_bus import EventBroadcaster
 
 
 async def test_two_subscribers_both_receive_published_event() -> None:

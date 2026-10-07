@@ -3,7 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
-from clau_decode.models import Message, ToolResultBlock, ToolUseBlock
+from agent_decoder.models import Message, ToolResultBlock, ToolUseBlock
 
 
 _SEVERITY_ORDER = {"error": 0, "warning": 1, "info": 2}

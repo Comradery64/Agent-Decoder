@@ -50,7 +50,7 @@ demo-data/
 demo-reel/
 
 # Keep the built static assets — they ship with the package
-!src/clau_decode/static/
+!src/agent_decoder/static/
 
 # Local scratch/handoff docs — never published
 docs/archive/

@@ -18,14 +18,14 @@ from typing import AsyncIterator
 
 import pytest
 
-from clau_decode import pty_runner as pr_mod
-from clau_decode.pty_runner import (
+from agent_decoder import pty_runner as pr_mod
+from agent_decoder.pty_runner import (
     PtyChannel,
     PtyManager,
     PtySubmitInFlight,
 )
-from clau_decode.db import Database
-from clau_decode.events_bus import EventBroadcaster
+from agent_decoder.db import Database
+from agent_decoder.events_bus import EventBroadcaster
 
 FAKE_TUI = (Path(__file__).parent / "fixtures" / "fake_claude_tui.py").resolve()
 
@@ -688,7 +688,7 @@ async def test_delete_session_cascades_to_ephemerals(real_db):
     so no on-delete cascade fires automatically — the deletion must be
     explicit in delete_session() (Phase 2 live-smoke finding).
     """
-    from clau_decode.models import Project, Session
+    from agent_decoder.models import Project, Session
 
     sid = "btw-cascade-sid-aaaa"
     project = Project(

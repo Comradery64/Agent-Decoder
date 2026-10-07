@@ -408,7 +408,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
       - Initial filesystem scan on startup.
       - Background file-watcher task that feeds the SSE event queue.
       - All /api/* routes.
-      - Optional static file serving from ``src/clau_decode/static/`` (the built
+      - Optional static file serving from ``src/agent_decoder/static/`` (the built
         React frontend, if present).
 
     Args:
@@ -2931,7 +2931,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
 
 
 # ---------------------------------------------------------------------------
-# Module-level app for `uvicorn clau_decode.server:app --reload`
+# Module-level app for `uvicorn agent_decoder.server:app --reload`
 # ---------------------------------------------------------------------------
 
 

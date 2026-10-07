@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Iterator
-from clau_decode.models import Message
+from agent_decoder.models import Message
 from .extractor import TokenExtractor
 from .models import PromptCost
 
