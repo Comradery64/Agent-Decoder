@@ -13,7 +13,7 @@ Agent Decoder is in the 0.x series. Security fixes are applied to the latest min
 
 Please report vulnerabilities **privately**, not in a public issue.
 
-Report it through GitHub's [private vulnerability reporting](https://github.com/Comradery64/Clau-Decode/security/advisories/new) — the repository's **Security → Report a vulnerability** tab.
+Report it through GitHub's [private vulnerability reporting](https://github.com/Comradery64/Agent-Decoder/security/advisories/new) — the repository's **Security → Report a vulnerability** tab.
 
 Include, at minimum:
 

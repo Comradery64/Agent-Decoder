@@ -16,7 +16,7 @@ If you're not sure whether something is in scope, open an issue first and we can
 Agent Decoder has a Python 3.10+ backend (FastAPI + SQLite, tested with pytest) and a TypeScript frontend (React 18 + Vite, tested with vitest). You'll need Python 3.10+, [`uv`](https://docs.astral.sh/uv/), and Node.js 20+.
 
 ```bash
-git clone https://github.com/Comradery64/Clau-Decode
+git clone https://github.com/Comradery64/Agent-Decoder
 cd Agent Decoder
 
 # Install backend deps + build the frontend

@@ -414,7 +414,7 @@ export default function SettingsModal() {
   );
 }
 
-const ABOUT_REPO = "https://github.com/Comradery64/Clau-Decode";
+const ABOUT_REPO = "https://github.com/Comradery64/Agent-Decoder";
 
 function AboutLink({ href, children }: { href: string; children: ReactNode }) {
   return (

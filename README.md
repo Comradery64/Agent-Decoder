@@ -10,8 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Comradery64/Clau-Decode/actions/workflows/ci.yml">
-    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Comradery64/Clau-Decode/ci.yml?branch=main&label=CI&style=flat-square">
+  <a href="https://github.com/Comradery64/Agent-Decoder/actions/workflows/ci.yml">
+    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Comradery64/Agent-Decoder/ci.yml?branch=main&label=CI&style=flat-square">
   </a>
   <a href="LICENSE">
     <img alt="License" src="https://img.shields.io/badge/license-FSL--1.1--Apache--2.0-blue?style=flat-square">
@@ -19,7 +19,7 @@
   <a href="pyproject.toml">
     <img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square">
   </a>
-  <a href="https://github.com/Comradery64/Clau-Decode/blob/main/CHANGELOG.md">
+  <a href="https://github.com/Comradery64/Agent-Decoder/blob/main/CHANGELOG.md">
     <img alt="Changelog" src="https://img.shields.io/badge/changelog-keep--a--changelog-orange?style=flat-square">
   </a>
 </p>
@@ -27,13 +27,13 @@
 <p align="center">
   <video
     src="https://github.com/user-attachments/assets/6f5a9a09-fbab-467f-82b1-c2e642dc8726"
-    poster="https://github.com/Comradery64/Clau-Decode/raw/main/docs/demo-poster.jpg"
+    poster="https://github.com/Comradery64/Agent-Decoder/raw/main/docs/demo-poster.jpg"
     controls
     muted
     playsinline
     width="820">
     <a href="https://github.com/user-attachments/assets/6f5a9a09-fbab-467f-82b1-c2e642dc8726">
-      <img src="https://github.com/Comradery64/Clau-Decode/raw/main/docs/demo-poster.jpg" alt="Agent Decoder demo — click to play" width="820">
+      <img src="https://github.com/Comradery64/Agent-Decoder/raw/main/docs/demo-poster.jpg" alt="Agent Decoder demo — click to play" width="820">
     </a>
   </video>
 </p>
@@ -53,22 +53,22 @@ recap engine.
 ```bash
 # Install as an isolated tool — its own virtualenv, on your PATH, nothing
 # touches your system Python. Use whichever you already have:
-uv tool install git+https://github.com/Comradery64/Clau-Decode.git
+uv tool install git+https://github.com/Comradery64/Agent-Decoder.git
 # or:
-pipx install git+https://github.com/Comradery64/Clau-Decode.git
+pipx install git+https://github.com/Comradery64/Agent-Decoder.git
 
 ring                 # opens http://localhost:4242
 
 # update later — re-pull the latest from main (git installs need --force;
 # plain `upgrade`/`reinstall` won't fetch new commits):
-uv tool install --force git+https://github.com/Comradery64/Clau-Decode.git
+uv tool install --force git+https://github.com/Comradery64/Agent-Decoder.git
 # or:
-pipx install --force git+https://github.com/Comradery64/Clau-Decode.git
+pipx install --force git+https://github.com/Comradery64/Agent-Decoder.git
 ```
 
 Requires Python 3.10+. The wheel ships the pre-built frontend, so **no Node.js is needed** — only for development. All data stays on your machine — no telemetry.
 
-> Just trying it out? Run without installing: `uvx --from git+https://github.com/Comradery64/Clau-Decode.git ring`
+> Just trying it out? Run without installing: `uvx --from git+https://github.com/Comradery64/Agent-Decoder.git ring`
 > Prefer not to install? Run it straight from a clone — see [Development](#development).
 > Advanced: `pip install` works too, but only **inside an activated virtualenv** — never your system/Homebrew Python (PEP 668 will block it, and a global install can shadow other checkouts).
 
@@ -229,7 +229,7 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md) for a system diagram and deeper notes.
 ## Development
 
 ```bash
-git clone https://github.com/Comradery64/Clau-Decode
+git clone https://github.com/Comradery64/Agent-Decoder
 cd Agent Decoder
 
 # Install backend deps (into an isolated .venv) + build the frontend
@@ -340,7 +340,7 @@ The Native view ships these monospace fonts so the in-app font picker works on a
 - [Ruff](https://docs.astral.sh/ruff/) and [pre-commit](https://pre-commit.com/) — code style and pre-commit hooks
 - [Editorconfig](https://editorconfig.org/) — consistent indentation across editors
 
-Every project listed above is independently licensed by its respective authors; check each project's repository for terms. If we've missed an attribution, please [open an issue](https://github.com/Comradery64/Clau-Decode/issues).
+Every project listed above is independently licensed by its respective authors; check each project's repository for terms. If we've missed an attribution, please [open an issue](https://github.com/Comradery64/Agent-Decoder/issues).
 
 ## License
 
