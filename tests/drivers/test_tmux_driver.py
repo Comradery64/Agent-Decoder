@@ -193,7 +193,7 @@ def _fake_driver(**kw) -> TmuxDriver:
         sid,
         cwd=os.getcwd(),
         spawn_command=[sys.executable, FAKE_CLI],
-        socket_name=f"clau-decode-test-{uuid.uuid4().hex[:8]}",
+        socket_name=f"agent-decoder-test-{uuid.uuid4().hex[:8]}",
         rows=24,
         cols=80,
         **kw,
@@ -363,7 +363,7 @@ async def test_live_codex_spawn_and_capture():
         sid,
         cwd=os.getcwd(),
         spawn_command=codex_spawn_builder(sandbox="read-only"),
-        socket_name=f"clau-decode-live-{uuid.uuid4().hex[:8]}",
+        socket_name=f"agent-decoder-live-{uuid.uuid4().hex[:8]}",
     )
     try:
         await d.spawn(cols=120, rows=40)

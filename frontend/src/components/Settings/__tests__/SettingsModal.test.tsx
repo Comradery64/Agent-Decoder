@@ -93,7 +93,7 @@ describe("SettingsModal", () => {
     // Version is fetched from /api/host-info (the backend's single source) —
     // there is no version string hard-coded in the frontend.
     expect(await screen.findByText("Version 9.9.9")).toBeInTheDocument();
-    expect(screen.getByText("Clau-Decode")).toBeInTheDocument();
+    expect(screen.getByText("Agent Decoder")).toBeInTheDocument();
     expect(screen.getByText("macOS")).toBeInTheDocument();
     expect(api.getHostInfo).toHaveBeenCalled();
   });

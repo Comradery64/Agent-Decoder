@@ -200,7 +200,7 @@ def _ensure_trust(config_dir: Path, cwd: str) -> bool:
     we don't pre-empt it, our first user message gets consumed by the
     dialog's Enter binding and never reaches the chat input.
 
-    clau-decode owns the chat-spawn gesture (click ``+``, choose/inherit
+    agent-decoder owns the chat-spawn gesture (click ``+``, choose/inherit
     a cwd, hit send) so the trust signal is implicit in the UI flow —
     this just plumbs that intent through to claude's config.
 
@@ -714,7 +714,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
 
         # Safety net behind the live watcher. The watcher only catches changes
         # while the server is running AND only if the OS delivers the event;
-        # anything that changed while clau-decode was down, or any watch event
+        # anything that changed while agent-decoder was down, or any watch event
         # the kernel coalesced/dropped, would otherwise stay stale until the
         # next restart (the "session shows no/old history even though it
         # resumes fine in the terminal" symptom). This periodic pass re-stats
@@ -768,7 +768,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
         asyncio.create_task(_refresh_pricing())
         nonlocal _pty_manager, _driver_manager
         # ui_endpoint is written into Phase-1 lock sidecars so a peer
-        # clau-decode reading the lock can render "open in UI at ..."
+        # agent-decoder reading the lock can render "open in UI at ..."
         # in its take-over banner. Best-effort — config.host of
         # "0.0.0.0" gets normalised to "127.0.0.1" for the URL.
         _ui_host = "127.0.0.1" if config.host in ("0.0.0.0", "::") else config.host
@@ -806,7 +806,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
                 if _pty_manager is not None:
                     await _pty_manager.shutdown()
 
-    app = FastAPI(title="Clau-Decode", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(title="Agent Decoder", version="0.1.0", lifespan=lifespan)
     # Session-detail responses are megabytes of JSON for old chats; gzip cuts
     # transfer time by ~10x. minimum_size avoids overhead for tiny payloads.
     # Localhost-only app, so there's no network to save bytes on: default

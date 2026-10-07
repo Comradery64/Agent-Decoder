@@ -11,8 +11,8 @@ Why tmux (validated in the Phase-4 spike, 2026-06-21 against codex 0.137.0):
   * Generic across CLIs — no per-provider TUI state machine to rebuild.
 
 Mechanics (each validated in the spike):
-  * Isolated server socket ``tmux -L clau-decode`` — never the user's default.
-  * One tmux session per driven clau-decode session: ``cd_<sanitised-id>``.
+  * Isolated server socket ``tmux -L ring`` — never the user's default.
+  * One tmux session per driven agent-decoder session: ``cd_<sanitised-id>``.
   * Output: a thin ``tmux attach`` client runs inside a Python pty; we stream
     its raw master-fd bytes to the Native transport (same shape as the Claude
     PTY). Multiple clients may attach, so reconnect is just another attach.
@@ -50,7 +50,7 @@ _log = logging.getLogger(__name__)
 
 # Isolated tmux server socket — keeps every driven session off the user's
 # default tmux server so we never list, resize, or kill their windows.
-DEFAULT_SOCKET = "clau-decode"
+DEFAULT_SOCKET = "agent-decoder"
 
 # Seconds to let the TUI register a bracketed paste before the submitting
 # Enter. The spike showed text+Enter sent back-to-back drops the Enter.

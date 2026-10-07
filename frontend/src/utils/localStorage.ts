@@ -1,3 +1,5 @@
+// NOTE: storage keys keep the pre-rename "clau-decode:" prefix on purpose —
+// renaming them would silently reset users' saved UI state.
 export const LS = {
   STARRED: "clau-decode:starred",
   RENAMED: "clau-decode:renamed",
@@ -7,9 +9,9 @@ export const LS = {
   SIDEBAR_WIDTH: "clau-decode:sidebar-width",
   READ_SESSIONS_LEGACY: "clau-decode:read-sessions",
   // Map<sessionId, ms-since-epoch> — wall-clock of the most recent
-  // submit through /api/pty/submit (clau-decode → claude PTY). Used by
+  // submit through /api/pty/submit (agent-decoder → claude PTY). Used by
   // the recap auto-trigger to distinguish conversations whose last turn
-  // was driven by clau-decode from those driven by Claude Code CLI.
+  // was driven by agent-decoder from those driven by Claude Code CLI.
   LAST_SUBMIT_AT: "clau-decode:last-submit-at",
 } as const;
 
@@ -43,7 +45,7 @@ export function lsSetRaw(key: string, value: string): void {
  * Stamp the current wall-clock against ``sessionId`` in
  * ``LS.LAST_SUBMIT_AT``. Called inside the chat-input submit path so
  * that the recap auto-trigger can later check "was the last activity
- * on this session driven by clau-decode?" by comparing this stamp
+ * on this session driven by agent-decoder?" by comparing this stamp
  * against ``SessionDetail.updated_at``.
  */
 export function markClauDecodeSubmit(sessionId: string): void {

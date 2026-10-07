@@ -1,4 +1,4 @@
-# THE single source of truth for Clau-Decode's version. Edit it here and
+# THE single source of truth for Agent Decoder's version. Edit it here and
 # nowhere else — every other place derives from this one string:
 #   * Python packaging  — pyproject's [tool.hatch.version] reads this file.
 #   * CLI `--version`   — cli.py imports __version__.

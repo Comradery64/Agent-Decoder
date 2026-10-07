@@ -1,4 +1,4 @@
-"""User configuration — persisted to XDG_CONFIG_HOME/clau-decode/config.json.
+"""User configuration — persisted to XDG_CONFIG_HOME/agent-decoder/config.json.
 
 Contract (for Agent 2 to implement):
   load_config() -> AppConfig
@@ -9,10 +9,10 @@ Contract (for Agent 2 to implement):
     - Atomically write config to the config file (write to .tmp, rename)
 
   get_config_path() -> Path
-    - Return XDG_CONFIG_HOME/clau-decode/config.json (or ~/.config/clau-decode/config.json)
+    - Return XDG_CONFIG_HOME/agent-decoder/config.json (or ~/.config/agent-decoder/config.json)
 
   get_db_path() -> Path
-    - Return XDG_DATA_HOME/clau-decode/index.db (or ~/.local/share/clau-decode/index.db),
+    - Return XDG_DATA_HOME/agent-decoder/index.db (or ~/.local/share/agent-decoder/index.db),
       transparently migrating a legacy ~/.cache DB on first use
 
 SOLID notes:
@@ -28,20 +28,28 @@ from pathlib import Path
 
 from .models import AppConfig
 
+# Pre-rename app name; only used to find data to migrate (see get_db_path).
+_LEGACY_NAME = "clau-decode"
+
 
 def get_config_path() -> Path:
-    """Return the path to the clau-decode configuration file.
+    """Return the path to the agent-decoder configuration file.
 
     Respects the XDG Base Directory specification: uses ``XDG_CONFIG_HOME`` if
     set, otherwise falls back to ``~/.config``.
 
     Returns:
-        ``<xdg_config>/clau-decode/config.json``
+        ``<xdg_config>/agent-decoder/config.json``
     """
     xdg_config = os.environ.get("XDG_CONFIG_HOME", "") or str(
         Path("~/.config").expanduser()
     )
-    return Path(xdg_config) / "clau-decode" / "config.json"
+    path = Path(xdg_config) / "agent-decoder" / "config.json"
+    legacy = Path(xdg_config) / _LEGACY_NAME / "config.json"
+    if not path.exists() and legacy.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(legacy, path)  # one-time copy; legacy file left as backstop
+    return path
 
 
 def _legacy_cache_db_path() -> Path:
@@ -50,11 +58,19 @@ def _legacy_cache_db_path() -> Path:
     xdg_cache = os.environ.get("XDG_CACHE_HOME", "") or str(
         Path("~/.cache").expanduser()
     )
-    return Path(xdg_cache) / "clau-decode" / "index.db"
+    return Path(xdg_cache) / _LEGACY_NAME / "index.db"
+
+
+def _legacy_data_db_path() -> Path:
+    """The pre-rename DB location (``<xdg_data>/clau-decode/index.db``)."""
+    xdg_data = os.environ.get("XDG_DATA_HOME", "") or str(
+        Path("~/.local/share").expanduser()
+    )
+    return Path(xdg_data) / _LEGACY_NAME / "index.db"
 
 
 def get_db_path() -> Path:
-    """Return the path to the clau-decode SQLite database.
+    """Return the path to the agent-decoder SQLite database.
 
     Stored under the DURABLE data dir (``XDG_DATA_HOME`` / ``~/.local/share``),
     NOT the cache dir: the DB holds non-regenerable user intent (archived /
@@ -67,16 +83,18 @@ def get_db_path() -> Path:
     writes survive). The legacy file is left in place as a backstop.
 
     Returns:
-        ``<xdg_data>/clau-decode/index.db``
+        ``<xdg_data>/agent-decoder/index.db``
     """
     xdg_data = os.environ.get("XDG_DATA_HOME", "") or str(
         Path("~/.local/share").expanduser()
     )
-    db_path = Path(xdg_data) / "clau-decode" / "index.db"
+    db_path = Path(xdg_data) / "agent-decoder" / "index.db"
 
     if not db_path.exists():
-        legacy = _legacy_cache_db_path()
-        if legacy.exists():
+        # Newest legacy location first: pre-rename data dir, then ~/.cache.
+        for legacy in (_legacy_data_db_path(), _legacy_cache_db_path()):
+            if not legacy.exists():
+                continue
             db_path.parent.mkdir(parents=True, exist_ok=True)
             # Copy the main DB plus WAL/SHM so recent (un-checkpointed) writes
             # — e.g. the latest archive/star — aren't lost in the move.
@@ -84,6 +102,7 @@ def get_db_path() -> Path:
                 src = Path(str(legacy) + suffix)
                 if src.exists():
                     shutil.copy2(src, Path(str(db_path) + suffix))
+            break
     return db_path
 
 

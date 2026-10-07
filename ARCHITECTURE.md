@@ -1,12 +1,12 @@
 # Architecture
 
-This document describes the internal architecture of `clau-decode`. It
+This document describes the internal architecture of `ring`. It
 complements [`README.md`](README.md) (user-facing) with the technical detail a
 contributor or reviewer needs to navigate the code.
 
 ## Overview
 
-Clau-Decode is a single-process, local-first application. A FastAPI server
+Agent Decoder is a single-process, local-first application. A FastAPI server
 (uvicorn, bound to `127.0.0.1:4242` by default) scans your AI coding
 assistant's JSONL session files into a SQLite index, exposes them through a
 JSON HTTP API plus a Server-Sent Events stream, and serves a pre-built React +
@@ -36,8 +36,8 @@ flowchart LR
 
   subgraph Filesystem[Filesystem]
     JSONL[~/.claude/projects/**/*.jsonl]
-    Cfg[~/.config/clau-decode/config.json]
-    Cache[~/.local/share/clau-decode/index.db]
+    Cfg[~/.config/agent-decoder/config.json]
+    Cache[~/.local/share/agent-decoder/index.db]
   end
 
   SPA -->|fetch + EventSource| Server
@@ -114,13 +114,13 @@ flowchart LR
 
 ## Storage
 
-Clau-Decode follows the [XDG Base Directory
+Agent Decoder follows the [XDG Base Directory
 spec](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html):
 
 | Purpose | Path (default) | Notes |
 |---------|----------------|-------|
-| User config | `~/.config/clau-decode/config.json` (or `$XDG_CONFIG_HOME/clau-decode/config.json`) | Atomic writes (`*.tmp` → rename) |
-| Session index | `~/.local/share/clau-decode/index.db` (or `$XDG_DATA_HOME/clau-decode/index.db`) | SQLite + FTS5; durable (holds stars/archives/titles). Use `--force-refresh` to rescan rather than deleting |
+| User config | `~/.config/agent-decoder/config.json` (or `$XDG_CONFIG_HOME/agent-decoder/config.json`) | Atomic writes (`*.tmp` → rename) |
+| Session index | `~/.local/share/agent-decoder/index.db` (or `$XDG_DATA_HOME/agent-decoder/index.db`) | SQLite + FTS5; durable (holds stars/archives/titles). Use `--force-refresh` to rescan rather than deleting |
 | Scanned sessions | `~/.claude/projects/**/*.jsonl` (configurable) | Read-only by default; written only via the runner or `--enable-edit` |
 
 No remote storage. No outbound network calls except optional pricing-table

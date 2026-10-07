@@ -57,7 +57,7 @@ export function OwnershipBanner({
   };
 
   // Phase-1 metadata wins over the bare pid list when a sidecar is
-  // present. ``kind`` tells the user whether it's a peer clau-decode
+  // present. ``kind`` tells the user whether it's a peer agent-decoder
   // (with a clickable ui_endpoint) or a wrapped terminal claude.
   const fo = ownership?.foreign_owner;
   const heading = fo

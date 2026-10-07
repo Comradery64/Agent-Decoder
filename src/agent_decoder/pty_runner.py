@@ -12,7 +12,7 @@ There is no general per-session busy lock: ``submit()`` succeeds while a
 normal turn is in flight so ``/btw`` can flow straight through to PTY stdin.
 The one exception is an active ``/btw`` modal/capture; until that resolves,
 new submits are rejected so foreground slash commands cannot be swallowed by
-the modal. The hidden TUI interprets the bytes; clau-decode's existing JSONL
+the modal. The hidden TUI interprets the bytes; agent-decoder's existing JSONL
 watcher → SQLite → SSE pipeline remains the canonical content channel for
 non-ephemeral turns.
 
@@ -307,7 +307,7 @@ def _session_conflict_pids(
       - **lsof** (backstop): catches the brief append moment when a
         wrapper-hidden claude actually writes the JSONL. Blind to idle.
       - **lock sidecar** (authoritative for cooperating writers): the
-        Phase-1 ``.lock`` file written by clau-decode and — once
+        Phase-1 ``.lock`` file written by agent-decoder and — once
         Phase 2 ships — by ``claude-wrapper``-spawned terminals.
         Cross-host sidecars contribute no pid (we can't signal a
         remote pid); their existence is surfaced via
@@ -507,7 +507,7 @@ class PtyChannel:
             try:
                 self._lock_sidecar = LockSidecar.acquire(
                     self._jsonl_path,
-                    owner_kind="clau-decode",
+                    owner_kind="agent-decoder",
                     ui_endpoint=self._ui_endpoint,
                 )
                 self._lock_sidecar.start_heartbeat()
@@ -1161,7 +1161,7 @@ class PtyChannel:
         _OWN_CLAUDE_PIDS.discard(proc.pid)
 
         # Phase 1 — release the lock sidecar AFTER the subprocess is
-        # reaped. Releasing earlier would let a second clau-decode
+        # reaped. Releasing earlier would let a second ring
         # acquire while our claude is still partway through its
         # tear-down JSONL writes.
         if self._lock_sidecar is not None:
@@ -1308,7 +1308,7 @@ class PtyManager:
         self._db = db
         self._bus = bus
         # Phase-1 lock sidecar metadata. ``ui_endpoint`` is plumbed
-        # into each PtyChannel so a peer clau-decode reading the lock
+        # into each PtyChannel so a peer agent-decoder reading the lock
         # can render a "open in UI at …" link in its take-over banner.
         # Falls back to ``None`` for tests / non-HTTP callers.
         self._ui_endpoint = ui_endpoint

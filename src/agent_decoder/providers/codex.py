@@ -1,6 +1,6 @@
 """OpenAI Codex CLI provider adapter (read-only, Phase 2).
 
-Decodes Codex rollout JSONL files (rollout-*.jsonl) into clau-decode's
+Decodes Codex rollout JSONL files (rollout-*.jsonl) into agent-decoder's
 normalized domain model.  Interactive operations (send / resume / fork /
 edit) are disabled in this phase; Phase 4 will flip can_send / can_resume.
 

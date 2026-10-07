@@ -9,7 +9,7 @@
 #
 # Equivalent to:  python3 src/agent_decoder/migrate.py --capture [...]
 # Or, the fully guided one-command flow (auto-detects capture vs merge):
-#   clau-decode migrate      # installed
+#   ring migrate      # installed
 #   python3 src/agent_decoder/migrate.py   # install-free
 #
 set -euo pipefail

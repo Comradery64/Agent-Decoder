@@ -1,4 +1,4 @@
-"""Provider abstraction layer — adapters bridge external AI tools into clau-decode.
+"""Provider abstraction layer — adapters bridge external AI tools into agent-decoder.
 
 Each supported tool (Claude Code, Codex, etc.) ships as a ``ProviderAdapter``
 subclass registered via ``providers.registry``.  The server and scanner never

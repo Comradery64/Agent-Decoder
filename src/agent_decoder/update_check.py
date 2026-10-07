@@ -3,7 +3,7 @@
 PyPI, not GitHub, is the version-check source: PyPI's JSON API needs no
 authentication and has a far higher unauthenticated rate limit than GitHub's
 REST API (60 requests/hour/IP) — a background check running on every machine
-that has Clau-Decode installed shouldn't rely on a budget that low.
+that has Agent Decoder installed shouldn't rely on a budget that low.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ PYPI_JSON_URL_PREFIX = "https://pypi.org/pypi/"
 CHECK_TIMEOUT_S = 5.0
 
 # PyPI's project name, NOT the CLI command or Python package name (both stay
-# "clau-decode"/"agent_decoder") — PyPI rejected "clau-decode" as too similar
+# "agent-decoder"/"agent_decoder") — PyPI rejected "agent-decoder" as too similar
 # to an existing project, so the published distribution is "agent-decoder".
 DEFAULT_PACKAGE = "agent-decoder"
 

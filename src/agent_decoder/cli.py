@@ -1,4 +1,4 @@
-"""CLI entry point — `clau-decode [options] <command>`.
+"""CLI entry point — `ring [options] <command>`.
 
 Commands:
   dashboard   Launch the web UI (default when no command given)
@@ -77,7 +77,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--version",
         action="version",
-        version=f"clau-decode {__version__}",
+        version=f"agent-decoder {__version__}",
     )
     parser.add_argument(
         "--enable-edit",
@@ -246,7 +246,7 @@ def _run_dashboard(args: argparse.Namespace, config) -> None:
 
         threading.Thread(target=_open_browser, daemon=True).start()
 
-    print(f"Clau-Decode running at http://{host}:{config.port}", flush=True)
+    print(f"Agent Decoder running at http://{host}:{config.port}", flush=True)
     uvicorn.run(app, host=host, port=config.port, log_level="warning")
 
 
@@ -500,5 +500,5 @@ def main() -> None:
 
 
 def _run_migrate(args, config) -> None:
-    """``clau-decode migrate`` -- filesystem merge tool; ignores app config."""
+    """``ring migrate`` -- filesystem merge tool; ignores app config."""
     raise SystemExit(migrate.run(args))

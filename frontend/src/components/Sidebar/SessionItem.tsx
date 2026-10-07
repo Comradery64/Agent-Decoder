@@ -49,7 +49,7 @@ interface SessionItemProps {
   /**
    * Live runner status for this session — populated by the Sidebar's shared
    * polling hook (issue #12). Undefined means "not yet polled" or "no Headless
-   * runner managed by clau-decode" (e.g. session driven by external CLI).
+   * runner managed by agent-decoder" (e.g. session driven by external CLI).
    * Kept as a prop so SessionItem stays presentational and unit-testable.
    */
   runnerStatus?: RunnerStatus;

@@ -44,7 +44,7 @@ type AppEventMap = {
   "toast": { message: string; kind?: "error" | "info" };
 };
 
-const PFX = "clau-decode:";
+const PFX = "agent-decoder:";
 
 export function emit<K extends keyof AppEventMap>(name: K, detail: AppEventMap[K]): void {
   window.dispatchEvent(new CustomEvent(`${PFX}${name}`, { detail }));

@@ -37,11 +37,11 @@ _SUBSCRIPTION_BLOCKED_ENV: Final = frozenset(
 
 # Session-identity vars the `claude` CLI sets on itself so a nested/child
 # invocation can detect it's not a top-level session (e.g. it disables
-# transcript saving). If clau-decode's own server process was launched from
+# transcript saving). If agent-decoder's own server process was launched from
 # inside a Claude Code session, these leak into ``os.environ`` and — because
 # spawn_env otherwise starts from a raw copy of it — get inherited by every
-# native PTY clau-decode spawns, making an unrelated top-level `claude`
-# session falsely believe it's a child of another one. Every PTY clau-decode
+# native PTY agent-decoder spawns, making an unrelated top-level `claude`
+# session falsely believe it's a child of another one. Every PTY ring
 # spawns is its own top-level session, so these must never survive the copy.
 _SESSION_IDENTITY_BLOCKED_ENV: Final = frozenset({"CLAUDE_CODE_CHILD_SESSION"})
 

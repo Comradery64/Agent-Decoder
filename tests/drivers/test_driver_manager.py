@@ -59,7 +59,7 @@ def _patch_fake_build(monkeypatch):
             session_id,
             cwd,
             [sys.executable, FAKE_CLI],
-            socket_name=f"clau-decode-dm-{uuid.uuid4().hex[:8]}",
+            socket_name=f"agent-decoder-dm-{uuid.uuid4().hex[:8]}",
             **kw,
         )
 

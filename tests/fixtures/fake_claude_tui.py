@@ -223,7 +223,7 @@ def _emit_btw_modal(response_text: str, variant: str) -> None:
 
 
 def main() -> int:
-    # ``auth status`` probe — clau-decode's pty_runner calls this before every
+    # ``auth status`` probe — agent-decoder's pty_runner calls this before every
     # PTY spawn to decide whether to strip API-key vars. Mimic a subscription
     # response so existing strip-behavior tests keep passing; do NOT honour
     # --capture-* here (the probe is invisible to the spawn-under-test).

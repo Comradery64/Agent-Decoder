@@ -54,7 +54,7 @@ export function RecapSettings({
         </div>
         <div style={HINT_STYLE}>
           Generate a short Haiku-backed summary when you return to a session after being away.
-          Recaps are stored in clau-decode only — they never modify your conversation file.
+          Recaps are stored in agent-decoder only — they never modify your conversation file.
         </div>
       </div>
     </div>

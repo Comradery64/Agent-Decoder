@@ -9,7 +9,7 @@ The edit strategy:
      the original session UUID.  The session can resume as normal because it
      finds the expected file at the expected path.
 
-The backup file includes a ``clau-decode-backup`` metadata record so clau-decode
+The backup file includes a ``clau-decode-backup`` metadata record so agent-decoder
 can mark it ``is_fork = True`` (disabling "Open in Terminal" since its new UUID
 is unknown to the CLI's internal index).
 
@@ -58,7 +58,7 @@ def swap_session(
     backup_path = original_path.with_name(f"{original_path.stem}.bak.{ts}.jsonl")
 
     backup_lines: list[str] = [
-        json.dumps({"type": "clau-decode-backup", "originalSessionId": session_id})
+        json.dumps({"type": "agent-decoder-backup", "originalSessionId": session_id})
     ]
     for line in lines:
         try:

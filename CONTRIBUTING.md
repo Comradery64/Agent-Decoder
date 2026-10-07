@@ -1,6 +1,6 @@
-# Contributing to Clau-Decode
+# Contributing to Agent Decoder
 
-Thanks for your interest in Clau-Decode! This project is a local, privacy-focused tool for browsing AI coding assistant chat history. Contributions of all kinds are welcome.
+Thanks for your interest in Agent Decoder! This project is a local, privacy-focused tool for browsing AI coding assistant chat history. Contributions of all kinds are welcome.
 
 ## Ways to contribute
 
@@ -13,11 +13,11 @@ If you're not sure whether something is in scope, open an issue first and we can
 
 ## Development setup
 
-Clau-Decode has a Python 3.10+ backend (FastAPI + SQLite, tested with pytest) and a TypeScript frontend (React 18 + Vite, tested with vitest). You'll need Python 3.10+, [`uv`](https://docs.astral.sh/uv/), and Node.js 20+.
+Agent Decoder has a Python 3.10+ backend (FastAPI + SQLite, tested with pytest) and a TypeScript frontend (React 18 + Vite, tested with vitest). You'll need Python 3.10+, [`uv`](https://docs.astral.sh/uv/), and Node.js 20+.
 
 ```bash
 git clone https://github.com/Comradery64/Clau-Decode
-cd Clau-Decode
+cd Agent Decoder
 
 # Install backend deps + build the frontend
 make dev
@@ -73,7 +73,7 @@ Please confirm:
 
 ## Licensing
 
-Clau-Decode is released under the [Functional Source License, Version 1.1, with the Apache 2.0 Future License](LICENSE) (FSL-1.1-Apache-2.0). By submitting a contribution you agree that it is offered under those same terms. There is no CLA — your `git` authorship is sufficient attribution. Please don't paste in code you don't have the right to license under FSL-1.1-Apache-2.0.
+Agent Decoder is released under the [Functional Source License, Version 1.1, with the Apache 2.0 Future License](LICENSE) (FSL-1.1-Apache-2.0). By submitting a contribution you agree that it is offered under those same terms. There is no CLA — your `git` authorship is sufficient attribution. Please don't paste in code you don't have the right to license under FSL-1.1-Apache-2.0.
 
 ## Questions
 

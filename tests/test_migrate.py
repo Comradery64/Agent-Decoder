@@ -1,4 +1,4 @@
-"""Tests for the ``clau-decode migrate`` history/config merge tool."""
+"""Tests for the ``ring migrate`` history/config merge tool."""
 
 from __future__ import annotations
 

@@ -76,7 +76,7 @@ class DriverState(str, Enum):
 class ProviderDriver(abc.ABC):
     """Drive one live provider session over some backend transport.
 
-    One instance maps to one driven clau-decode session. Concrete backends
+    One instance maps to one driven agent-decoder session. Concrete backends
     (``TmuxDriver`` today) own the process lifecycle; this ABC fixes the shape
     the server and the Native transport depend on.
     """
@@ -127,7 +127,7 @@ class ProviderDriver(abc.ABC):
     async def send_text(self, text: str) -> None:
         """Submit a complete prompt as one composer message + Enter.
 
-        The structured path behind clau-decode's React composer. Handles
+        The structured path behind agent-decoder's React composer. Handles
         multi-line bodies without premature submission.
         """
         ...

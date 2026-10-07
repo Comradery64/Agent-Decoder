@@ -1,7 +1,7 @@
 """Abstract base classes for provider adapters.
 
 A ``ProviderAdapter`` bridges an external AI tool's on-disk format into
-clau-decode's domain model.  Every adapter must declare its ``capabilities``
+agent-decoder's domain model.  Every adapter must declare its ``capabilities``
 and implement the four operations the server uses:
 
   configured_roots — which paths to scan, per-provider config knowledge

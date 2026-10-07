@@ -1,10 +1,10 @@
 """Phase-1 JSONL lock sidecar (pty-ownership-plan.md).
 
 Promotes the Phase-0 hybrid pgrep+lsof detector from heuristic to
-authoritative for clau-decode-managed sessions. Each ``PtyChannel``
+authoritative for agent-decoder-managed sessions. Each ``PtyChannel``
 acquires a ``<jsonl_path>.lock`` JSON sidecar on spawn and refreshes
 its ``heartbeat_at`` every 30 s; ``release()`` runs on kill. A second
-clau-decode (or — once Phase 2 ships — a wrapped terminal claude)
+agent-decoder (or — once Phase 2 ships — a wrapped terminal claude)
 reading the sidecar can identify the existing owner by ``pid`` +
 ``hostname`` and decide whether to refuse the spawn or offer take-over.
 
@@ -17,7 +17,7 @@ level. The findings doc records this deviation.
 Sidecar schema (JSON, single line)::
 
     {
-      "owner_kind": "clau-decode",
+      "owner_kind": "agent-decoder",
       "pid": 12345,
       "hostname": "example-host.local",
       "heartbeat_at": "2026-05-26T14:30:01.234567+00:00",

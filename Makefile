@@ -22,7 +22,7 @@ test:
 
 # Run the app from source
 run:
-	uv run clau-decode
+	uv run ring
 
 # Clean build artifacts
 clean:

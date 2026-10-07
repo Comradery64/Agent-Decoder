@@ -143,7 +143,7 @@ def parse_session(path: Path) -> tuple[Session, list[Message]]:
                 session.is_worktree = True
                 continue
 
-            if record_type in ("clau-decode-fork", "clau-decode-backup"):
+            if record_type in ("agent-decoder-fork", "agent-decoder-backup", "clau-decode-fork", "clau-decode-backup"):
                 session.is_fork = True
                 continue
 

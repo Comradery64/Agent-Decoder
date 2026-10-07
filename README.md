@@ -33,18 +33,18 @@
     playsinline
     width="820">
     <a href="https://github.com/user-attachments/assets/6f5a9a09-fbab-467f-82b1-c2e642dc8726">
-      <img src="https://github.com/Comradery64/Clau-Decode/raw/main/docs/demo-poster.jpg" alt="Clau-Decode demo — click to play" width="820">
+      <img src="https://github.com/Comradery64/Clau-Decode/raw/main/docs/demo-poster.jpg" alt="Agent Decoder demo — click to play" width="820">
     </a>
   </video>
 </p>
 
 ---
 
-## Why Clau-Decode?
+## Why Agent Decoder?
 
 Your AI coding assistant writes a small mountain of JSONL session files into
 `~/.claude/projects/` — useful, but unreadable and impossible to search by hand.
-Clau-Decode reads those files locally, indexes them into SQLite, and serves a
+Agent Decoder reads those files locally, indexes them into SQLite, and serves a
 fast browser UI with full-text search, conversation rendering, analytics, and a
 recap engine.
 
@@ -199,7 +199,7 @@ git fetch origin && git reset --hard origin/main
 
 ## Configuration
 
-Settings are saved to `~/.config/clau-decode/config.json`. Edit them in the UI,
+Settings are saved to `~/.config/agent-decoder/config.json`. Edit them in the UI,
 or directly:
 
 ```json
@@ -212,14 +212,14 @@ or directly:
 }
 ```
 
-The session index lives at `~/.local/share/clau-decode/index.db` (durable, so it
-survives cache clears). To force a full rescan, run `clau-decode --force-refresh` —
+The session index lives at `~/.local/share/agent-decoder/index.db` (durable, so it
+survives cache clears). To force a full rescan, run `ring --force-refresh` —
 prefer this over deleting the DB, which also discards stars, archives, and custom
 titles.
 
 ## Architecture
 
-Clau-Decode is a local-first FastAPI server that scans your AI coding
+Agent Decoder is a local-first FastAPI server that scans your AI coding
 assistant's JSONL session files into a SQLite index, serves a React +
 TypeScript SPA, and drives the Claude CLI through a hidden PTY for in-app
 sessions.
@@ -230,14 +230,14 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md) for a system diagram and deeper notes.
 
 ```bash
 git clone https://github.com/Comradery64/Clau-Decode
-cd Clau-Decode
+cd Agent Decoder
 
 # Install backend deps (into an isolated .venv) + build the frontend
 make dev                      # = uv sync && build frontend
 
 # Run the app from source — in the project venv, so it always runs THIS
 # checkout (no global install, no shadowing):
-uv run clau-decode --no-open
+uv run ring --no-open
 # equivalently, as a module from the checkout root:
 uv run python -m agent_decoder --no-open
 # (make run wraps this)
@@ -276,9 +276,9 @@ process in [`SECURITY.md`](SECURITY.md) — do **not** open a public issue.
 
 ## Acknowledgements
 
-Clau-Decode is **inspired by, and built around the file format of, [Claude](https://www.anthropic.com/claude) and Claude Code from [Anthropic](https://www.anthropic.com/)**. This project is not affiliated with, endorsed by, or sponsored by Anthropic, PBC. *Claude* and *Claude Code* are trademarks of Anthropic, PBC; all references in this project are nominative.
+Agent Decoder is **inspired by, and built around the file format of, [Claude](https://www.anthropic.com/claude) and Claude Code from [Anthropic](https://www.anthropic.com/)**. This project is not affiliated with, endorsed by, or sponsored by Anthropic, PBC. *Claude* and *Claude Code* are trademarks of Anthropic, PBC; all references in this project are nominative.
 
-> *A personal note from the author* — I didn't write the code in this repository or build any of the underlying tools. I sat at my computer, typed into it, and kept asking it for more. The actual line-by-line authoring was done by AI coding assistants — Anthropic's [Claude](https://www.anthropic.com/claude) (Sonnet and Opus) and [Z.ai](https://z.ai/)'s GLM-5.1, with the latter doing a substantial share of the heavy lifting alongside them. They aren't in the lists below because they're AI models rather than libraries, but they deserve named credit here. The projects, products, and people below did the rest of the real work that made Clau-Decode possible:
+> *A personal note from the author* — I didn't write the code in this repository or build any of the underlying tools. I sat at my computer, typed into it, and kept asking it for more. The actual line-by-line authoring was done by AI coding assistants — Anthropic's [Claude](https://www.anthropic.com/claude) (Sonnet and Opus) and [Z.ai](https://z.ai/)'s GLM-5.1, with the latter doing a substantial share of the heavy lifting alongside them. They aren't in the lists below because they're AI models rather than libraries, but they deserve named credit here. The projects, products, and people below did the rest of the real work that made Agent Decoder possible:
 
 **Backend (Python)**
 

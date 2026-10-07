@@ -213,7 +213,7 @@ export function ChatInput({
     // Signal the parent BEFORE any network I/O so the optimistic
     // "Thinking" indicator flips on the same tick as the click.
     onSubmitStart?.({ kind: submitKind, content: text });
-    // Stamp this session as clau-decode-driven so the recap auto-trigger
+    // Stamp this session as agent-decoder-driven so the recap auto-trigger
     // can tell our turns apart from Claude Code CLI turns later.
     markClauDecodeSubmit(sessionId);
     // Append to history immediately (session detail catches up via SSE later)
