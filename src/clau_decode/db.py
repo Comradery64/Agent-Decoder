@@ -41,6 +41,7 @@ from typing import Optional
 
 import aiosqlite
 
+from .query_parser import filter_sql, parse_query
 from .models import (
     ContentBlock,
     ImageBlock,
@@ -1727,61 +1728,41 @@ class Database:
         # requested page, not just `limit` from its own start.
         fetch_size = offset + limit
 
-        # FTS5 treats `-`, `"`, `:`, etc. as operators. Coerce user input to
-        # space-separated word tokens so queries like "eye-candy" or "a:b" are
-        # interpreted as ordinary terms (AND'd by default), not column filters
-        # or NOT operators. This is a search-quality fix, not a security fix.
-        # The same sanitiser is applied to both messages and ephemeral queries.
-        import re as _re
-
-        sanitized = _re.sub(r"[^\w\s]", " ", query).strip()
-        if not sanitized:
+        # Query language (quotes, -negation, OR, prefix*, role:/project:/
+        # session:/before:/after:) is compiled by query_parser into a safe
+        # FTS5 MATCH expression plus plain SQL filters.
+        pq = parse_query(query)
+        if not pq.match:
             return []
-        match_query = sanitized
 
-        # Strategy (b): run two separate queries (messages_fts and
-        # ephemeral_messages_fts) and merge in Python.  This keeps the SQL
-        # simple (avoids a UNION between tables with different column shapes)
-        # and lets us attach source/kind/responds_to metadata cleanly.
-        # Merged result is sorted by timestamp DESC, then truncated to `limit`.
+        msg_extra, msg_fp = filter_sql(
+            pq, role="f.role", project="s.project_id",
+            session="f.session_id", ts="m.timestamp",
+        )
+        eph_extra, eph_fp = filter_sql(
+            pq, role="e.role", project="s.project_id",
+            session="e.session_id", ts="e.timestamp",
+        )
+        proj_clause = " AND s.project_id = ?" if project_id is not None else ""
+        proj_params: list = [project_id] if project_id is not None else []
 
-        if project_id is not None:
-            msg_sql = """
-                SELECT
-                    snippet(messages_fts, 0, '<b>', '</b>', '...', 20) AS snippet,
-                    f.session_id,
-                    f.message_id,
-                    f.role,
-                    s.title AS session_title,
-                    s.project_id,
-                    m.timestamp
-                FROM messages_fts f
-                JOIN sessions s ON s.id = f.session_id
-                JOIN messages m ON m.id = f.message_id
-                WHERE messages_fts MATCH ?
-                  AND s.project_id = ?
-                ORDER BY m.timestamp DESC
-                LIMIT ?
-            """
-            msg_params: tuple = (match_query, project_id, fetch_size)
-        else:
-            msg_sql = """
-                SELECT
-                    snippet(messages_fts, 0, '<b>', '</b>', '...', 20) AS snippet,
-                    f.session_id,
-                    f.message_id,
-                    f.role,
-                    s.title AS session_title,
-                    s.project_id,
-                    m.timestamp
-                FROM messages_fts f
-                JOIN sessions s ON s.id = f.session_id
-                JOIN messages m ON m.id = f.message_id
-                WHERE messages_fts MATCH ?
-                ORDER BY m.timestamp DESC
-                LIMIT ?
-            """
-            msg_params = (match_query, fetch_size)
+        msg_sql = f"""
+            SELECT
+                snippet(messages_fts, 0, '<b>', '</b>', '...', 20) AS snippet,
+                f.session_id,
+                f.message_id,
+                f.role,
+                s.title AS session_title,
+                s.project_id,
+                m.timestamp
+            FROM messages_fts f
+            JOIN sessions s ON s.id = f.session_id
+            JOIN messages m ON m.id = f.message_id
+            WHERE messages_fts MATCH ?{proj_clause}{msg_extra}
+            ORDER BY m.timestamp DESC
+            LIMIT ?
+        """
+        msg_params = (pq.match, *proj_params, *msg_fp, fetch_size)
 
         async with self._conn.execute(msg_sql, msg_params) as cursor:
             msg_rows = await cursor.fetchall()
@@ -1803,47 +1784,25 @@ class Database:
 
         # --- Ephemeral search ---
         # Ephemerals have no project_id in their own table; we join via sessions.
-        if project_id is not None:
-            eph_sql = """
-                SELECT
-                    snippet(ephemeral_messages_fts, 0, '<b>', '</b>', '...', 20) AS snippet,
-                    e.session_id,
-                    CAST(e.id AS TEXT) AS message_id,
-                    e.role,
-                    s.title AS session_title,
-                    s.project_id,
-                    e.timestamp,
-                    e.kind,
-                    e.responds_to
-                FROM ephemeral_messages_fts f
-                JOIN ephemeral_messages e ON e.id = f.ephemeral_id
-                JOIN sessions s ON s.id = e.session_id
-                WHERE ephemeral_messages_fts MATCH ?
-                  AND s.project_id = ?
-                ORDER BY e.timestamp DESC
-                LIMIT ?
-            """
-            eph_params: tuple = (match_query, project_id, fetch_size)
-        else:
-            eph_sql = """
-                SELECT
-                    snippet(ephemeral_messages_fts, 0, '<b>', '</b>', '...', 20) AS snippet,
-                    e.session_id,
-                    CAST(e.id AS TEXT) AS message_id,
-                    e.role,
-                    s.title AS session_title,
-                    s.project_id,
-                    e.timestamp,
-                    e.kind,
-                    e.responds_to
-                FROM ephemeral_messages_fts f
-                JOIN ephemeral_messages e ON e.id = f.ephemeral_id
-                JOIN sessions s ON s.id = e.session_id
-                WHERE ephemeral_messages_fts MATCH ?
-                ORDER BY e.timestamp DESC
-                LIMIT ?
-            """
-            eph_params = (match_query, fetch_size)
+        eph_sql = f"""
+            SELECT
+                snippet(ephemeral_messages_fts, 0, '<b>', '</b>', '...', 20) AS snippet,
+                e.session_id,
+                CAST(e.id AS TEXT) AS message_id,
+                e.role,
+                s.title AS session_title,
+                s.project_id,
+                e.timestamp,
+                e.kind,
+                e.responds_to
+            FROM ephemeral_messages_fts f
+            JOIN ephemeral_messages e ON e.id = f.ephemeral_id
+            JOIN sessions s ON s.id = e.session_id
+            WHERE ephemeral_messages_fts MATCH ?{proj_clause}{eph_extra}
+            ORDER BY e.timestamp DESC
+            LIMIT ?
+        """
+        eph_params = (pq.match, *proj_params, *eph_fp, fetch_size)
 
         async with self._conn.execute(eph_sql, eph_params) as cursor:
             eph_rows = await cursor.fetchall()
@@ -2068,11 +2027,10 @@ class Database:
         Returns plain dicts matching the shape of ``get_ephemeral_messages``.
         """
         assert self._conn is not None
-        import re as _re
-
-        sanitized = _re.sub(r"[^\w\s]", " ", query).strip()
-        if not sanitized:
+        pq = parse_query(query)
+        if not pq.match:
             return []
+        sanitized = pq.match
 
         if session_id is not None:
             sql = """
