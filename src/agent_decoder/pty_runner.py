@@ -869,10 +869,10 @@ class PtyChannel:
                 # Promoted from DEBUG to WARNING — extraction failure is a
                 # real bug worth surfacing in ops logs. The raw buffer is the
                 # live PTY output and may contain on-screen secrets, so we only
-                # dump it to disk when CLAU_DECODE_DEBUG is set (opt-in); by
+                # dump it to disk when AGENT_DECODER_DEBUG is set (opt-in); by
                 # default we just log its length.
                 dump_path: Optional[Path] = None
-                if os.environ.get("CLAU_DECODE_DEBUG"):
+                if os.environ.get("AGENT_DECODER_DEBUG"):
                     dump_path = Path("/tmp") / f"btw-extract-fail-{self.session_id}.bin"
                     try:
                         dump_path.write_bytes(raw)
@@ -885,7 +885,7 @@ class PtyChannel:
                     len(raw),
                     f", dumped to {dump_path}"
                     if dump_path
-                    else " (set CLAU_DECODE_DEBUG to dump raw bytes)",
+                    else " (set AGENT_DECODER_DEBUG to dump raw bytes)",
                 )
                 status = "failed"
             else:

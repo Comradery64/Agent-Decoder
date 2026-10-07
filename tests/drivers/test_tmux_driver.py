@@ -6,7 +6,7 @@ Layering of skips (so CI without tmux just skips the integration block):
     everywhere — they monkeypatch ``shutil.which`` and never touch tmux.
   * Mechanics tests gate on a real ``tmux`` and drive ``fake_cli.py`` — fast,
     deterministic, no ``codex`` auth/network needed.
-  * The opt-in ``CLAU_CODEX_LIVE`` smoke spawns the *real* ``codex`` (auth +
+  * The opt-in ``AGENT_CODEX_LIVE`` smoke spawns the *real* ``codex`` (auth +
     network) and is skipped unless tmux+codex are present and the env is set.
 """
 
@@ -353,8 +353,8 @@ async def test_capture_state_dead_when_no_session():
 
 
 @pytest.mark.skipif(
-    not (_HAS_TMUX and _HAS_CODEX and os.environ.get("CLAU_CODEX_LIVE")),
-    reason="set CLAU_CODEX_LIVE=1 with tmux+codex present to run the live smoke",
+    not (_HAS_TMUX and _HAS_CODEX and os.environ.get("AGENT_CODEX_LIVE")),
+    reason="set AGENT_CODEX_LIVE=1 with tmux+codex present to run the live smoke",
 )
 async def test_live_codex_spawn_and_capture():
     """Spawn the real codex TUI in tmux; confirm it comes up non-DEAD."""

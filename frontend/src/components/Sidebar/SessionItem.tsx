@@ -525,7 +525,7 @@ export function SessionItem({ session, isActive, onClick, runnerStatus, onToggle
                     borderRadius: "50%",
                     background: "var(--accent-green)",
                     boxShadow: "0 0 0 0 var(--accent-green)",
-                    animation: "clau-runner-pulse 1.6s ease-out infinite",
+                    animation: "ring-runner-pulse 1.6s ease-out infinite",
                     marginRight: "2px",
                   }}
                 />
