@@ -33,7 +33,7 @@
     "@testing-library/user-event": "^14.5.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^6.0.0",
+    "@vitejs/plugin-react": "^6.0.3",
     "jsdom": "^24.1.0",
     "typescript": "^5.5.3",
     "vite": "^8.0.16",
