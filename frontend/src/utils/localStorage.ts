@@ -48,14 +48,14 @@ export function lsSetRaw(key: string, value: string): void {
  * on this session driven by agent-decoder?" by comparing this stamp
  * against ``SessionDetail.updated_at``.
  */
-export function markClauDecodeSubmit(sessionId: string): void {
+export function markAgentDecoderSubmit(sessionId: string): void {
   const map = lsGetMap(LS.LAST_SUBMIT_AT);
   map[sessionId] = String(Date.now());
   lsPutMap(LS.LAST_SUBMIT_AT, map);
 }
 
-/** Read the timestamp written by ``markClauDecodeSubmit`` or null. */
-export function readClauDecodeSubmit(sessionId: string): number | null {
+/** Read the timestamp written by ``markAgentDecoderSubmit`` or null. */
+export function readAgentDecoderSubmit(sessionId: string): number | null {
   const v = lsGetMap(LS.LAST_SUBMIT_AT)[sessionId];
   if (!v) return null;
   const n = Number(v);

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { AppConfig, Recap } from "../../../api/types";
 import { api } from "../../../api/client";
-import { readClauDecodeSubmit } from "../../../utils/localStorage";
+import { readAgentDecoderSubmit } from "../../../utils/localStorage";
 
 // How far apart the session's latest activity (assistant or user message
 // timestamp) and our last agent-decoder submit can be before we conclude
@@ -131,7 +131,7 @@ export function useRecaps(
     // activity falls within ``OURS_WINDOW_MS`` of our last agent-decoder
     // submit. If the session has been driven by Claude Code CLI more
     // recently than us, the gap blows past the window and we stay quiet.
-    const lastSubmitMs = readClauDecodeSubmit(sid);
+    const lastSubmitMs = readAgentDecoderSubmit(sid);
     const lastActivityMs = lastActivityAt ? Date.parse(lastActivityAt) : NaN;
     const lastTurnWasOurs = (
       lastSubmitMs != null

@@ -233,8 +233,8 @@ export default function SettingsModal() {
                               setConfig(updated);
                               api.updateConfig(updated).catch(() => {});
                               const applyTheme = (
-                                window as Window & { __clauDecodeApplyTheme?: (t: string) => void }
-                              ).__clauDecodeApplyTheme;
+                                window as Window & { __agentDecoderApplyTheme?: (t: string) => void }
+                              ).__agentDecoderApplyTheme;
                               if (applyTheme) applyTheme(theme);
                             }}
                             style={segmentBtnStyle(config.theme === theme)}
