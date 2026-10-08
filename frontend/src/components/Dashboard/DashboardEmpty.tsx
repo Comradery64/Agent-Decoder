@@ -34,7 +34,7 @@ export function DashboardEmpty({ onSearch }: { onSearch: () => void }) {
         No sessions yet
       </h2>
       <div style={{ fontSize: "14px", color: "var(--text-secondary)", maxWidth: "440px", lineHeight: 1.6 }}>
-        Clau-Decode reads your local session history. Start a session and it will appear here automatically.
+        Agent Decoder reads your local session history. Start a session and it will appear here automatically.
       </div>
       <button
         onClick={onSearch}

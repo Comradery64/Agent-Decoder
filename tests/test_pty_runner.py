@@ -1,4 +1,4 @@
-"""Tests for ``clau_decode.pty_runner`` (PtyChannel + PtyManager).
+"""Tests for ``agent_decoder.pty_runner`` (PtyChannel + PtyManager).
 
 Binary injection strategy
 -------------------------
@@ -22,8 +22,8 @@ from typing import AsyncIterator
 
 import pytest
 
-from clau_decode import pty_runner as pr_mod
-from clau_decode.pty_runner import (
+from agent_decoder import pty_runner as pr_mod
+from agent_decoder.pty_runner import (
     DEFAULT_IDLE_TIMEOUT_S,
     DEFAULT_IDLE_WARN_S,
     PtyChannel,
@@ -31,7 +31,7 @@ from clau_decode.pty_runner import (
     PtyOwnershipConflict,
     _subscription_env,
 )
-from clau_decode.events_bus import EventBroadcaster
+from agent_decoder.events_bus import EventBroadcaster
 
 FAKE_TUI = (Path(__file__).parent / "fixtures" / "fake_claude_tui.py").resolve()
 
@@ -406,7 +406,7 @@ async def test_pty_spawn_produces_live_process_and_working_master_fd(
     tui_shim_path, tmp_path
 ):
     """Spawn a bare PtyChannel, verify liveness + master-fd write + drain."""
-    from clau_decode.pty_runner import _pty_env, DEFAULT_ROWS, DEFAULT_COLS
+    from agent_decoder.pty_runner import _pty_env, DEFAULT_ROWS, DEFAULT_COLS
 
     session_id = "test-spawn-01"
     # _pty_env is async now; the fake shim has no `auth status` subcommand
@@ -1045,7 +1045,7 @@ async def test_auth_required_emitted_on_not_logged_in_pattern(tmp_path):
     doesn't depend on a spawned subprocess. The PtyManager singleton
     that owns the channel is the bus publisher.
     """
-    from clau_decode.pty_runner import PtyChannel
+    from agent_decoder.pty_runner import PtyChannel
 
     bus = EventBroadcaster()
     q = bus.subscribe()
@@ -1102,7 +1102,7 @@ async def test_auth_required_detects_pattern_split_across_chunks(tmp_path):
     Real-world repro: TUI emits the banner mid-redraw and OS read() may
     return the head and tail in separate calls.
     """
-    from clau_decode.pty_runner import PtyChannel
+    from agent_decoder.pty_runner import PtyChannel
 
     bus = EventBroadcaster()
     q = bus.subscribe()

@@ -49,7 +49,7 @@ interface SessionItemProps {
   /**
    * Live runner status for this session — populated by the Sidebar's shared
    * polling hook (issue #12). Undefined means "not yet polled" or "no Headless
-   * runner managed by clau-decode" (e.g. session driven by external CLI).
+   * runner managed by agent-decoder" (e.g. session driven by external CLI).
    * Kept as a prop so SessionItem stays presentational and unit-testable.
    */
   runnerStatus?: RunnerStatus;
@@ -525,7 +525,7 @@ export function SessionItem({ session, isActive, onClick, runnerStatus, onToggle
                     borderRadius: "50%",
                     background: "var(--accent-green)",
                     boxShadow: "0 0 0 0 var(--accent-green)",
-                    animation: "clau-runner-pulse 1.6s ease-out infinite",
+                    animation: "ring-runner-pulse 1.6s ease-out infinite",
                     marginRight: "2px",
                   }}
                 />

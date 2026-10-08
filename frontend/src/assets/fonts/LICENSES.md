@@ -1,6 +1,6 @@
 # Bundled fonts — licenses
 
-The woff2 files in this directory are bundled with Clau-Decode and served by the
+The woff2 files in this directory are bundled with Agent Decoder and served by the
 Native PTY view. **All are licensed under the SIL Open Font License, Version 1.1
 (OFL-1.1).** Their copyright notices are retained below, and the full OFL-1.1
 text follows. Where a font declares a Reserved Font Name (RFN), that name must

@@ -41,7 +41,7 @@ function applyProviderSkin(provider: string): void {
 // only the user's explicit view choice is remembered.
 function readStoredViewMode(sessionId: string): ChatViewMode | null {
   try {
-    const v = sessionStorage.getItem(`clau-decode:viewMode:${sessionId}`);
+    const v = sessionStorage.getItem(`agent-decoder:viewMode:${sessionId}`);
     return v === "decoded" || v === "native" || v === "sbs" ? v : null;
   } catch {
     return null;
@@ -50,7 +50,7 @@ function readStoredViewMode(sessionId: string): ChatViewMode | null {
 
 function storeViewMode(sessionId: string, mode: ChatViewMode): void {
   try {
-    sessionStorage.setItem(`clau-decode:viewMode:${sessionId}`, mode);
+    sessionStorage.setItem(`agent-decoder:viewMode:${sessionId}`, mode);
   } catch {
     // sessionStorage unavailable (private mode / disabled) — best-effort.
   }

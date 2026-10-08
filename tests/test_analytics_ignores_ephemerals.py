@@ -17,9 +17,9 @@ from pathlib import Path
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from clau_decode.config import AppConfig
-from clau_decode.db import Database
-from clau_decode.server import create_app
+from agent_decoder.config import AppConfig
+from agent_decoder.db import Database
+from agent_decoder.server import create_app
 
 
 # ---------------------------------------------------------------------------

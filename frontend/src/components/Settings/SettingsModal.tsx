@@ -47,7 +47,7 @@ export default function SettingsModal() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [category, setCategory] = useState<CategoryId>("general");
   // Version + platform for the About panel. Fetched lazily when About opens.
-  // The version is the backend's single source of truth (clau_decode.__version__)
+  // The version is the backend's single source of truth (agent_decoder.__version__)
   // surfaced via /api/host-info — there is no version string in the frontend.
   const [hostInfo, setHostInfo] = useState<HostInfo | null>(null);
   // Best-effort PyPI check (see api.getUpdateCheck) — null while loading or
@@ -233,8 +233,8 @@ export default function SettingsModal() {
                               setConfig(updated);
                               api.updateConfig(updated).catch(() => {});
                               const applyTheme = (
-                                window as Window & { __clauDecodeApplyTheme?: (t: string) => void }
-                              ).__clauDecodeApplyTheme;
+                                window as Window & { __agentDecoderApplyTheme?: (t: string) => void }
+                              ).__agentDecoderApplyTheme;
                               if (applyTheme) applyTheme(theme);
                             }}
                             style={segmentBtnStyle(config.theme === theme)}
@@ -414,7 +414,7 @@ export default function SettingsModal() {
   );
 }
 
-const ABOUT_REPO = "https://github.com/Comradery64/Clau-Decode";
+const ABOUT_REPO = "https://github.com/Comradery64/Agent-Decoder";
 
 function AboutLink({ href, children }: { href: string; children: ReactNode }) {
   return (
@@ -457,14 +457,14 @@ function AboutPanel({
           and soft shadow, so it's rendered as-is (served from public/). */}
       <img
         src="/app-icon.png"
-        alt="Clau-Decode"
+        alt="Agent Decoder"
         width={72}
         height={72}
         style={{ display: "block", marginBottom: "14px" }}
       />
 
       <div style={{ fontSize: "26px", fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text-primary)", lineHeight: 1.1 }}>
-        Clau-Decode
+        Agent Decoder
       </div>
 
       <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "8px" }}>
@@ -494,7 +494,7 @@ function AboutPanel({
           }}
         >
           v{updateCheck.latest_version} available — run{" "}
-          <code style={{ fontFamily: "var(--font-mono)" }}>pipx install --force clau-decode</code> to update
+          <code style={{ fontFamily: "var(--font-mono)" }}>pipx install --force agent-decoder</code> to update
         </a>
       )}
 

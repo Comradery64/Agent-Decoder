@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 
-from clau_decode.models import AppConfig, Profile
+from agent_decoder.models import AppConfig, Profile
 
 
 def _expand(p: str) -> str:

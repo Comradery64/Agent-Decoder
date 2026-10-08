@@ -13,9 +13,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-from clau_decode.db import Database
-from clau_decode.models import Message, SessionDetail, TextBlock, TokenUsage
-from clau_decode.reporter import export_json, export_markdown
+from agent_decoder.db import Database
+from agent_decoder.models import Message, SessionDetail, TextBlock, TokenUsage
+from agent_decoder.reporter import export_json, export_markdown
 
 
 # ---------------------------------------------------------------------------
@@ -298,9 +298,9 @@ class TestExportRoutesWithEphemerals:
         self, tmp_path: Path, session_id: str = "s-api-001"
     ):
         from httpx import AsyncClient, ASGITransport
-        from clau_decode.server import create_app
-        from clau_decode.config import AppConfig
-        from clau_decode.db import Database
+        from agent_decoder.server import create_app
+        from agent_decoder.config import AppConfig
+        from agent_decoder.db import Database
 
         db_path = tmp_path / "export_eph.db"
         async with Database(db_path) as db:

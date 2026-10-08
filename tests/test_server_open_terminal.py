@@ -14,12 +14,12 @@ from unittest.mock import patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from clau_decode.db import Database
-from clau_decode.models import AppConfig, Project, Session
+from agent_decoder.db import Database
+from agent_decoder.models import AppConfig, Project, Session
 
 
 def _make_app(db_path: Path, config: AppConfig):
-    from clau_decode.server import create_app
+    from agent_decoder.server import create_app
 
     return create_app(config, db_path)
 

@@ -3,8 +3,8 @@
 from decimal import Decimal
 from unittest.mock import MagicMock
 
-from clau_decode.analytics.models import TokenBreakdown
-from clau_decode.analytics.pricing import ModelPricing
+from agent_decoder.analytics.models import TokenBreakdown
+from agent_decoder.analytics.pricing import ModelPricing
 
 
 def _pricing(inp: str, out: str, cw: str = "0", cr: str = "0") -> ModelPricing:
@@ -17,7 +17,7 @@ def _pricing(inp: str, out: str, cw: str = "0", cr: str = "0") -> ModelPricing:
 
 
 def _make_engine(pricing_map: dict):
-    from clau_decode.analytics.cost import CostEngine
+    from agent_decoder.analytics.cost import CostEngine
 
     strategy = MagicMock()
     strategy.get_pricing.side_effect = lambda model: pricing_map.get(model)
@@ -73,9 +73,9 @@ class TestCostRoutes:
     async def test_cost_route_exists(self, tmp_path):
         from httpx import ASGITransport, AsyncClient
 
-        from clau_decode.config import load_config
-        from clau_decode.db import Database
-        from clau_decode.server import create_app
+        from agent_decoder.config import load_config
+        from agent_decoder.db import Database
+        from agent_decoder.server import create_app
 
         db_path = tmp_path / "test.db"
         async with Database(db_path) as db:
@@ -93,9 +93,9 @@ class TestCostRoutes:
     async def test_pricing_route_exists(self, tmp_path):
         from httpx import ASGITransport, AsyncClient
 
-        from clau_decode.config import load_config
-        from clau_decode.db import Database
-        from clau_decode.server import create_app
+        from agent_decoder.config import load_config
+        from agent_decoder.db import Database
+        from agent_decoder.server import create_app
 
         db_path = tmp_path / "test.db"
         async with Database(db_path) as db:

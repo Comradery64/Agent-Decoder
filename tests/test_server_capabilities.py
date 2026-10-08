@@ -13,13 +13,13 @@ from unittest.mock import patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from clau_decode.db import Database
-from clau_decode.drivers import DriverAvailability
-from clau_decode.models import AppConfig, Message, Project, Session, TextBlock
+from agent_decoder.db import Database
+from agent_decoder.drivers import DriverAvailability
+from agent_decoder.models import AppConfig, Message, Project, Session, TextBlock
 
 
 def _make_app(db_path: Path, config: AppConfig):
-    from clau_decode.server import create_app
+    from agent_decoder.server import create_app
 
     return create_app(config, db_path)
 
@@ -81,7 +81,7 @@ def _force_drivable(monkeypatch, available: bool):
     """Pin Codex runtime drivability so gate tests don't depend on the host
     having (or lacking) tmux+codex."""
     monkeypatch.setattr(
-        "clau_decode.server._driver_availability",
+        "agent_decoder.server._driver_availability",
         lambda p: DriverAvailability(
             available=available, reason=None if available else "no tmux"
         ),

@@ -41,25 +41,25 @@ dev = [
 ]
 
 [project.scripts]
-clau-decode = "clau_decode.cli:main"
+ring = "agent_decoder.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/Comradery64/Clau-Decode"
-Repository = "https://github.com/Comradery64/Clau-Decode"
-Issues = "https://github.com/Comradery64/Clau-Decode/issues"
+Homepage = "https://github.com/Comradery64/Agent-Decoder"
+Repository = "https://github.com/Comradery64/Agent-Decoder"
+Issues = "https://github.com/Comradery64/Agent-Decoder/issues"
 
-# Version is read from the single source: src/clau_decode/__init__.py __version__.
+# Version is read from the single source: src/agent_decoder/__init__.py __version__.
 # (No VCS/tag derivation — one string, edited in one place, always in sync.)
 [tool.hatch.version]
-path = "src/clau_decode/__init__.py"
+path = "src/agent_decoder/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/clau_decode"]
+packages = ["src/agent_decoder"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "--cov=src/clau_decode --cov-report=term-missing -v"
+addopts = "--cov=src/agent_decoder --cov-report=term-missing -v"
 
 [tool.coverage.run]
-source = ["src/clau_decode"]
+source = ["src/agent_decoder"]

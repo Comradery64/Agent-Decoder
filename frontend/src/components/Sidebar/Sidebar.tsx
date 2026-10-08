@@ -374,7 +374,7 @@ function SidebarFooter({ collapsed }: { collapsed?: boolean }) {
   };
 
   const activeProfile = profiles.find((p) => p.id === activeProfileId);
-  const displayName = activeProfile ? activeProfile.name : profiles.length > 0 ? "All Profiles" : "Clau-Decode";
+  const displayName = activeProfile ? activeProfile.name : profiles.length > 0 ? "All Profiles" : "Agent Decoder";
   const displayColor = activeProfile ? activeProfile.color : "var(--accent-orange)";
   const initial = activeProfile ? (activeProfile.name?.[0] ?? "?").toUpperCase() : "C";
 

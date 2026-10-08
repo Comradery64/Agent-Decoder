@@ -18,9 +18,9 @@ from unittest.mock import patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from clau_decode.db import Database
-from clau_decode.models import AppConfig, Project
-from clau_decode.parser import parse_session
+from agent_decoder.db import Database
+from agent_decoder.models import AppConfig, Project
+from agent_decoder.parser import parse_session
 
 FIXTURES = Path(__file__).parent / "fixtures"
 SIMPLE_JSONL = FIXTURES / "simple_session.jsonl"
@@ -55,8 +55,8 @@ async def _seed_db(db_path: Path) -> None:
 
 
 def _make_app(db_path: Path, config: AppConfig | None = None):
-    from clau_decode.config import load_config
-    from clau_decode.server import create_app
+    from agent_decoder.config import load_config
+    from agent_decoder.server import create_app
 
     return create_app(config or load_config(), db_path)
 
@@ -126,7 +126,7 @@ class TestConfig:
             "auto_open_browser": False,
             "port": 9999,
         }
-        with patch("clau_decode.server.save_config"):
+        with patch("agent_decoder.server.save_config"):
             r = await client_empty.put("/api/config", json=new_cfg)
         assert r.status_code == 200
         data = r.json()
@@ -484,7 +484,7 @@ class TestReveal:
         # We use a session whose file_path the DB stores — but in the seeded app
         # the parser records the real path, so we just verify the route is reachable.
         # We test the "file not found" branch by patching Path.exists.
-        with patch("clau_decode.server.Path") as mock_path_cls:
+        with patch("agent_decoder.server.Path") as mock_path_cls:
             mock_instance = mock_path_cls.return_value
             mock_instance.exists.return_value = False
             r = await client_seeded.post(f"/api/sessions/{SIMPLE_SESSION_ID}/reveal")
@@ -813,7 +813,7 @@ class TestSSEPayloadContract:
 
     def _payload(self, path=None):
         import json
-        from clau_decode.server import _sse_event_data
+        from agent_decoder.server import _sse_event_data
 
         raw = _sse_event_data(
             path or Path("/home/user/.claude/projects/-foo/abc.jsonl")
@@ -835,13 +835,13 @@ class TestSSEPayloadContract:
 
     def test_pathlib_path_is_accepted(self):
         """Passing a raw Path (not pre-stringified) must not raise."""
-        from clau_decode.server import _sse_event_data
+        from agent_decoder.server import _sse_event_data
 
         result = _sse_event_data(Path("/some/file.jsonl"))
         assert isinstance(result, str)
 
     def test_string_path_is_also_accepted(self):
-        from clau_decode.server import _sse_event_data
+        from agent_decoder.server import _sse_event_data
 
         result = _sse_event_data("/some/file.jsonl")
         assert isinstance(result, str)
@@ -878,7 +878,7 @@ async def edit_client():
             await db.upsert_session(session)
             await db.upsert_messages(messages)
 
-        from clau_decode.models import AppConfig as _AppConfig
+        from agent_decoder.models import AppConfig as _AppConfig
 
         config = _AppConfig(edit_enabled=True)
         app = _make_app(db_path, config)

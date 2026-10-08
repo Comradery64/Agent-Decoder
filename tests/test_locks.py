@@ -1,4 +1,4 @@
-"""Tests for ``clau_decode.locks`` — Phase-1 lock sidecar.
+"""Tests for ``agent_decoder.locks`` — Phase-1 lock sidecar.
 
 Covers:
   - acquire/release happy path (file appears, file disappears).
@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from clau_decode.locks import (
+from agent_decoder.locks import (
     HEARTBEAT_INTERVAL_S,
     STALE_AFTER_S,
     LockAlreadyHeld,
@@ -44,10 +44,10 @@ def test_acquire_release_round_trip(tmp_path):
     lp = _lock_path_for(jsonl)
     assert not lp.exists()
 
-    sc = LockSidecar.acquire(jsonl, owner_kind="clau-decode")
+    sc = LockSidecar.acquire(jsonl, owner_kind="agent-decoder")
     assert lp.exists()
     payload = json.loads(lp.read_text())
-    assert payload["owner_kind"] == "clau-decode"
+    assert payload["owner_kind"] == "agent-decoder"
     assert payload["pid"] == os.getpid()
     assert payload["hostname"] == socket.gethostname()
     assert payload["ui_endpoint"] is None
@@ -63,7 +63,7 @@ def test_acquire_writes_ui_endpoint(tmp_path):
     try:
         sc = LockSidecar.acquire(
             jsonl,
-            owner_kind="clau-decode",
+            owner_kind="agent-decoder",
             ui_endpoint="http://127.0.0.1:4242",
         )
         payload = json.loads(_lock_path_for(jsonl).read_text())
@@ -74,7 +74,7 @@ def test_acquire_writes_ui_endpoint(tmp_path):
 
 def test_is_self_when_pid_and_host_match(tmp_path):
     jsonl = _jsonl(tmp_path)
-    sc = LockSidecar.acquire(jsonl, owner_kind="clau-decode")
+    sc = LockSidecar.acquire(jsonl, owner_kind="agent-decoder")
     try:
         assert sc.is_self()
         # Read-back instance also matches because we're still the same process.
@@ -104,7 +104,7 @@ def test_acquire_raises_lock_already_held_for_fresh_foreign_lock(tmp_path):
     _lock_path_for(jsonl).write_text(
         json.dumps(
             {
-                "owner_kind": "clau-decode",
+                "owner_kind": "agent-decoder",
                 "pid": 1,  # init — alive but not ours
                 "hostname": socket.gethostname() + "-other",  # foreign host
                 "heartbeat_at": datetime.now(timezone.utc).isoformat(),
@@ -113,7 +113,7 @@ def test_acquire_raises_lock_already_held_for_fresh_foreign_lock(tmp_path):
         )
     )
     with pytest.raises(LockAlreadyHeld) as exc:
-        LockSidecar.acquire(jsonl, owner_kind="clau-decode")
+        LockSidecar.acquire(jsonl, owner_kind="agent-decoder")
     assert exc.value.existing.pid == 1
     assert exc.value.existing.hostname.endswith("-other")
 
@@ -127,7 +127,7 @@ def test_acquire_takes_over_stale_lock_with_dead_pid(tmp_path):
     _lock_path_for(jsonl).write_text(
         json.dumps(
             {
-                "owner_kind": "clau-decode",
+                "owner_kind": "agent-decoder",
                 "pid": dead_pid,
                 "hostname": socket.gethostname(),  # same host so PID probe fires
                 "heartbeat_at": datetime.now(timezone.utc).isoformat(),
@@ -140,7 +140,7 @@ def test_acquire_takes_over_stale_lock_with_dead_pid(tmp_path):
     assert pre is not None and pre.is_stale()
 
     # acquire takes it over silently.
-    sc = LockSidecar.acquire(jsonl, owner_kind="clau-decode")
+    sc = LockSidecar.acquire(jsonl, owner_kind="agent-decoder")
     try:
         assert sc.pid == os.getpid()
         payload = json.loads(_lock_path_for(jsonl).read_text())
@@ -155,7 +155,7 @@ def test_same_host_eperm_pid_is_fresh(tmp_path, monkeypatch):
     _lock_path_for(jsonl).write_text(
         json.dumps(
             {
-                "owner_kind": "clau-decode",
+                "owner_kind": "agent-decoder",
                 "pid": 12345,
                 "hostname": socket.gethostname(),
                 "heartbeat_at": datetime.now(timezone.utc).isoformat(),
@@ -184,7 +184,7 @@ def test_acquire_takes_over_when_cross_host_heartbeat_expired(tmp_path):
     _lock_path_for(jsonl).write_text(
         json.dumps(
             {
-                "owner_kind": "clau-decode",
+                "owner_kind": "agent-decoder",
                 "pid": 1,
                 "hostname": socket.gethostname() + "-other",
                 "heartbeat_at": old.isoformat(),
@@ -192,7 +192,7 @@ def test_acquire_takes_over_when_cross_host_heartbeat_expired(tmp_path):
             }
         )
     )
-    sc = LockSidecar.acquire(jsonl, owner_kind="clau-decode")
+    sc = LockSidecar.acquire(jsonl, owner_kind="agent-decoder")
     try:
         payload = json.loads(_lock_path_for(jsonl).read_text())
         assert payload["pid"] == os.getpid()
@@ -205,14 +205,14 @@ def test_acquire_returns_existing_self_lock_with_refreshed_heartbeat(tmp_path):
     """If we acquire twice in the same process, the second call refreshes
     the heartbeat in place rather than raising."""
     jsonl = _jsonl(tmp_path)
-    sc1 = LockSidecar.acquire(jsonl, owner_kind="clau-decode")
+    sc1 = LockSidecar.acquire(jsonl, owner_kind="agent-decoder")
     try:
         ts1 = sc1.heartbeat_at
         # Tiny sleep so timestamps strictly differ.
         import time as _t
 
         _t.sleep(0.01)
-        sc2 = LockSidecar.acquire(jsonl, owner_kind="clau-decode")
+        sc2 = LockSidecar.acquire(jsonl, owner_kind="agent-decoder")
         try:
             assert sc2.pid == os.getpid()
             payload = json.loads(_lock_path_for(jsonl).read_text())
@@ -233,7 +233,7 @@ async def test_heartbeat_task_refreshes_timestamp(tmp_path):
     in-memory ``heartbeat_at`` attribute AND the on-disk JSON tick.
     """
     jsonl = _jsonl(tmp_path)
-    sc = LockSidecar.acquire(jsonl, owner_kind="clau-decode")
+    sc = LockSidecar.acquire(jsonl, owner_kind="agent-decoder")
     try:
         before = sc.heartbeat_at
         sc.start_heartbeat(interval_s=0.05)
@@ -249,7 +249,7 @@ async def test_heartbeat_task_refreshes_timestamp(tmp_path):
 
 async def test_release_cancels_running_heartbeat_task(tmp_path):
     jsonl = _jsonl(tmp_path)
-    sc = LockSidecar.acquire(jsonl, owner_kind="clau-decode")
+    sc = LockSidecar.acquire(jsonl, owner_kind="agent-decoder")
     sc.start_heartbeat(interval_s=0.05)
     task = sc._heartbeat_task
     assert task is not None and not task.done()
@@ -261,7 +261,7 @@ async def test_release_cancels_running_heartbeat_task(tmp_path):
 
 def test_release_is_idempotent_on_read_only_instance(tmp_path):
     jsonl = _jsonl(tmp_path)
-    sc1 = LockSidecar.acquire(jsonl, owner_kind="clau-decode")
+    sc1 = LockSidecar.acquire(jsonl, owner_kind="agent-decoder")
     try:
         rb = LockSidecar.read(jsonl)
         # rb is read-only — release must NOT unlink the file out from

@@ -24,7 +24,7 @@ function applyTheme(theme: string) {
   }
 }
 
-(window as Window & { __clauDecodeApplyTheme?: typeof applyTheme }).__clauDecodeApplyTheme = applyTheme;
+(window as Window & { __agentDecoderApplyTheme?: typeof applyTheme }).__agentDecoderApplyTheme = applyTheme;
 
 const chatViewImport = () => import("./components/ChatView/ChatView");
 const searchOverlayImport = () => import("./components/Sidebar/SearchOverlay");

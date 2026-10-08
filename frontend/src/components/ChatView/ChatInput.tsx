@@ -11,7 +11,7 @@ import {
 } from "./ChatInputBanners";
 import { useMessageHistory } from "./hooks/useMessageHistory";
 import { useProviderTheme } from "./ProviderThemeContext";
-import { markClauDecodeSubmit } from "../../utils/localStorage";
+import { markAgentDecoderSubmit } from "../../utils/localStorage";
 
 export type SubmitKind = "message" | "btw" | "slash";
 export interface SubmitMeta {
@@ -213,9 +213,9 @@ export function ChatInput({
     // Signal the parent BEFORE any network I/O so the optimistic
     // "Thinking" indicator flips on the same tick as the click.
     onSubmitStart?.({ kind: submitKind, content: text });
-    // Stamp this session as clau-decode-driven so the recap auto-trigger
+    // Stamp this session as agent-decoder-driven so the recap auto-trigger
     // can tell our turns apart from Claude Code CLI turns later.
-    markClauDecodeSubmit(sessionId);
+    markAgentDecoderSubmit(sessionId);
     // Append to history immediately (session detail catches up via SSE later)
     history.recordSend(text);
     setSending(true);

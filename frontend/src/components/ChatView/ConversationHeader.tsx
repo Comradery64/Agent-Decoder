@@ -21,7 +21,7 @@ function OwnershipBadge({ ownership }: { ownership: PtyOwnership | null }) {
   const palette = {
     ours: {
       color: "var(--accent-green, #6aaa64)",
-      label: "Attached here (clau-decode)",
+      label: "Attached here (agent-decoder)",
     },
     terminal: {
       color: "var(--accent-amber, #c9b870)",

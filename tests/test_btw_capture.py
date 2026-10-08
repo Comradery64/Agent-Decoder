@@ -53,55 +53,55 @@ def _final_write_v2(text: str, cols: int = 4, rows: int = 3) -> bytes:
 
 class TestIsBtwInput:
     def test_bare_slash_btw(self):
-        from clau_decode.btw_capture import is_btw_input
+        from agent_decoder.btw_capture import is_btw_input
 
         assert is_btw_input("/btw") is True
 
     def test_slash_btw_with_text(self):
-        from clau_decode.btw_capture import is_btw_input
+        from agent_decoder.btw_capture import is_btw_input
 
         assert is_btw_input("/btw foo") is True
 
     def test_slash_btw_with_newline(self):
-        from clau_decode.btw_capture import is_btw_input
+        from agent_decoder.btw_capture import is_btw_input
 
         assert is_btw_input("/btw\n") is True
 
     def test_uppercase_btw(self):
-        from clau_decode.btw_capture import is_btw_input
+        from agent_decoder.btw_capture import is_btw_input
 
         # claude's regex is /gi (case-insensitive)
         assert is_btw_input("/BTW foo") is True
 
     def test_mixed_case_btw(self):
-        from clau_decode.btw_capture import is_btw_input
+        from agent_decoder.btw_capture import is_btw_input
 
         assert is_btw_input("/Btw something") is True
 
     def test_btw_underscore_suffix_false(self):
-        from clau_decode.btw_capture import is_btw_input
+        from agent_decoder.btw_capture import is_btw_input
 
         # \b does not match between 'w' and '_' (both \w)
         assert is_btw_input("/btw_foo") is False
 
     def test_btw_hyphen_suffix_true(self):
-        from clau_decode.btw_capture import is_btw_input
+        from agent_decoder.btw_capture import is_btw_input
 
         # \b matches between 'w' (word) and '-' (non-word)
         assert is_btw_input("/btw-foo") is True
 
     def test_leading_whitespace_false(self):
-        from clau_decode.btw_capture import is_btw_input
+        from agent_decoder.btw_capture import is_btw_input
 
         assert is_btw_input("  /btw foo") is False
 
     def test_prefix_char_false(self):
-        from clau_decode.btw_capture import is_btw_input
+        from agent_decoder.btw_capture import is_btw_input
 
         assert is_btw_input("x/btw foo") is False
 
     def test_empty_string_false(self):
-        from clau_decode.btw_capture import is_btw_input
+        from agent_decoder.btw_capture import is_btw_input
 
         assert is_btw_input("") is False
 
@@ -113,28 +113,28 @@ class TestIsBtwInput:
 
 class TestExtractBtwInput:
     def test_strips_slash_btw_space(self):
-        from clau_decode.btw_capture import extract_btw_input
+        from agent_decoder.btw_capture import extract_btw_input
 
         assert extract_btw_input("/btw what is 2+2?") == "what is 2+2?"
 
     def test_strips_bare_slash_btw(self):
-        from clau_decode.btw_capture import extract_btw_input
+        from agent_decoder.btw_capture import extract_btw_input
 
         assert extract_btw_input("/btw") == ""
 
     def test_strips_uppercase(self):
-        from clau_decode.btw_capture import extract_btw_input
+        from agent_decoder.btw_capture import extract_btw_input
 
         assert extract_btw_input("/BTW explain X") == "explain X"
 
     def test_no_btw_prefix_passthrough(self):
-        from clau_decode.btw_capture import extract_btw_input
+        from agent_decoder.btw_capture import extract_btw_input
 
         # Not a /btw command — returned unchanged
         assert extract_btw_input("hello world") == "hello world"
 
     def test_strips_leading_whitespace_after_btw(self):
-        from clau_decode.btw_capture import extract_btw_input
+        from agent_decoder.btw_capture import extract_btw_input
 
         assert extract_btw_input("/btw   lots of spaces") == "lots of spaces"
 
@@ -146,25 +146,25 @@ class TestExtractBtwInput:
 
 class TestFindModalOpen:
     def test_finds_at_start(self):
-        from clau_decode.btw_capture import find_modal_open, BTW_MODAL_OPEN_MARKER
+        from agent_decoder.btw_capture import find_modal_open, BTW_MODAL_OPEN_MARKER
 
         raw = BTW_MODAL_OPEN_MARKER + b" extra"
         assert find_modal_open(raw) == 0
 
     def test_finds_at_offset(self):
-        from clau_decode.btw_capture import find_modal_open, BTW_MODAL_OPEN_MARKER
+        from agent_decoder.btw_capture import find_modal_open, BTW_MODAL_OPEN_MARKER
 
         raw = b"preamble" + BTW_MODAL_OPEN_MARKER
         expected = len(b"preamble")
         assert find_modal_open(raw) == expected
 
     def test_not_found_returns_minus_one(self):
-        from clau_decode.btw_capture import find_modal_open
+        from agent_decoder.btw_capture import find_modal_open
 
         assert find_modal_open(b"no marker here") == -1
 
     def test_start_param_skips_earlier_match(self):
-        from clau_decode.btw_capture import find_modal_open, BTW_MODAL_OPEN_MARKER
+        from agent_decoder.btw_capture import find_modal_open, BTW_MODAL_OPEN_MARKER
 
         raw = BTW_MODAL_OPEN_MARKER + b"---" + BTW_MODAL_OPEN_MARKER
         first = find_modal_open(raw, 0)
@@ -180,7 +180,7 @@ class TestFindModalOpen:
 
 class TestFindResponseComplete:
     def test_finds_footer(self):
-        from clau_decode.btw_capture import (
+        from agent_decoder.btw_capture import (
             find_response_complete,
             BTW_RESPONSE_COMPLETE_MARKER,
         )
@@ -189,12 +189,12 @@ class TestFindResponseComplete:
         assert find_response_complete(raw) == len(b"some content ")
 
     def test_not_found_returns_minus_one(self):
-        from clau_decode.btw_capture import find_response_complete
+        from agent_decoder.btw_capture import find_response_complete
 
         assert find_response_complete(b"no footer") == -1
 
     def test_start_param(self):
-        from clau_decode.btw_capture import (
+        from agent_decoder.btw_capture import (
             find_response_complete,
             BTW_RESPONSE_COMPLETE_MARKER,
         )
@@ -216,7 +216,7 @@ class TestExtractBtwResponse:
 
     def test_single_line_variant_a(self):
         """Variant A: cursor-relative + ESC[K — extracts '4.'"""
-        from clau_decode.btw_capture import extract_btw_response
+        from agent_decoder.btw_capture import extract_btw_response
 
         raw = _MODAL_OPEN + _final_write_v1("4.") + _FOOTER
         result = extract_btw_response(raw)
@@ -224,7 +224,7 @@ class TestExtractBtwResponse:
 
     def test_single_line_variant_a_longer_text(self):
         """Variant A with longer text still extracts correctly."""
-        from clau_decode.btw_capture import extract_btw_response
+        from agent_decoder.btw_capture import extract_btw_response
 
         raw = _MODAL_OPEN + _final_write_v1("The answer is 4") + _FOOTER
         result = extract_btw_response(raw)
@@ -234,7 +234,7 @@ class TestExtractBtwResponse:
 
     def test_multi_line_variant_a_three_lines(self):
         """Three separate Variant A final-write sequences joined with newlines."""
-        from clau_decode.btw_capture import extract_btw_response
+        from agent_decoder.btw_capture import extract_btw_response
 
         raw = (
             _MODAL_OPEN
@@ -255,7 +255,7 @@ class TestExtractBtwResponse:
 
     def test_animation_frames_excluded_variant_a(self):
         """Animation frames (colour-wrapped, no ESC[K) must NOT appear in result."""
-        from clau_decode.btw_capture import extract_btw_response
+        from agent_decoder.btw_capture import extract_btw_response
 
         raw = (
             _MODAL_OPEN
@@ -272,7 +272,7 @@ class TestExtractBtwResponse:
 
     def test_multi_line_variant_b(self):
         """Variant B: columnar rendering reconstructs text correctly."""
-        from clau_decode.btw_capture import extract_btw_response
+        from agent_decoder.btw_capture import extract_btw_response
 
         # Simulate: animation frames then final write with columnar text
         raw = (
@@ -296,7 +296,7 @@ class TestExtractBtwResponse:
         back to scanning from offset 0 — the live accumulator only
         feeds bytes while ``expecting_btw_response=True`` so there's no
         risk of picking up pre-modal content."""
-        from clau_decode.btw_capture import extract_btw_response
+        from agent_decoder.btw_capture import extract_btw_response
 
         raw = _final_write_v1("some text") + _FOOTER
         result = extract_btw_response(raw)
@@ -306,14 +306,14 @@ class TestExtractBtwResponse:
         """Buffer with neither modal-open marker nor any final-write
         pattern still returns None — fallback is permissive about the
         start position but still requires extractable content."""
-        from clau_decode.btw_capture import extract_btw_response
+        from agent_decoder.btw_capture import extract_btw_response
 
         raw = b"random noise without any modal artifacts"
         result = extract_btw_response(raw)
         assert result is None
 
     def test_explicit_bad_open_offset_returns_none(self):
-        from clau_decode.btw_capture import extract_btw_response
+        from agent_decoder.btw_capture import extract_btw_response
 
         raw = b"short"
         result = extract_btw_response(raw, open_offset=999)
@@ -323,7 +323,7 @@ class TestExtractBtwResponse:
 
     def test_no_footer_still_extracts(self):
         """When the footer is absent (truncated capture), extract what's available."""
-        from clau_decode.btw_capture import extract_btw_response
+        from agent_decoder.btw_capture import extract_btw_response
 
         raw = _MODAL_OPEN + _final_write_v1("partial answer")
         # No BTW_RESPONSE_COMPLETE_MARKER — should still extract
@@ -334,7 +334,7 @@ class TestExtractBtwResponse:
 
     def test_animation_then_multi_line_variant_a(self):
         """Each line may have its own animation cycle before its final write."""
-        from clau_decode.btw_capture import extract_btw_response
+        from agent_decoder.btw_capture import extract_btw_response
 
         raw = (
             _MODAL_OPEN
@@ -365,7 +365,7 @@ class TestExtractBtwResponse:
         if not fixture_path.exists():
             pytest.skip("live_zai_no_open_marker.bin fixture missing")
 
-        from clau_decode.btw_capture import extract_btw_response, find_modal_open
+        from agent_decoder.btw_capture import extract_btw_response, find_modal_open
 
         raw = fixture_path.read_bytes()
         # Sanity: the open marker really is absent in this capture.
@@ -386,7 +386,7 @@ class TestExtractBtwResponse:
                 "multiline.bin fixture not yet generated — run /tmp/btw-mline-spike/run.py"
             )
 
-        from clau_decode.btw_capture import extract_btw_response
+        from agent_decoder.btw_capture import extract_btw_response
 
         raw = fixture_path.read_bytes()
         result = extract_btw_response(raw)

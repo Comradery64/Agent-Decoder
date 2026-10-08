@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from clau_decode.pty_screen_state import classify_screen
+from agent_decoder.pty_screen_state import classify_screen
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

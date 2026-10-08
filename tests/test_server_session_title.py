@@ -18,12 +18,12 @@ from typing import AsyncIterator
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from clau_decode.db import Database
-from clau_decode.models import AppConfig, Project, Session
+from agent_decoder.db import Database
+from agent_decoder.models import AppConfig, Project, Session
 
 
 def _make_app(db_path: Path, config: AppConfig):
-    from clau_decode.server import create_app
+    from agent_decoder.server import create_app
 
     return create_app(config, db_path)
 
@@ -155,7 +155,7 @@ async def test_rename_appears_in_project_session_list(env) -> None:
 
 async def test_rename_publishes_session_meta_event(env) -> None:
     """Two simulated SSE subscribers both receive the rename event."""
-    from clau_decode.events_bus import EventBroadcaster
+    from agent_decoder.events_bus import EventBroadcaster
 
     # Patch the broadcaster class with an instance we can subscribe to *before*
     # the endpoint publishes. Easiest: create the app, then reach into the

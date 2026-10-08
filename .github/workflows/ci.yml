@@ -48,7 +48,7 @@ jobs:
 
       - name: Tests (pytest with coverage)
         # pyproject's [tool.pytest.ini_options] addopts already enables
-        # --cov=clau_decode; append an XML report for Codecov upload.
+        # --cov=agent_decoder; append an XML report for Codecov upload.
         run: uv run pytest --cov-report=xml
 
       - name: Upload coverage to Codecov

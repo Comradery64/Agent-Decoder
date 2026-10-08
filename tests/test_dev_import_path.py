@@ -17,8 +17,8 @@ def test_repo_root_python_prefers_checkout_src_without_pythonpath():
             "-c",
             (
                 "from pathlib import Path; "
-                "import clau_decode; "
-                "print(Path(clau_decode.__file__).resolve())"
+                "import agent_decoder; "
+                "print(Path(agent_decoder.__file__).resolve())"
             ),
         ],
         cwd=repo_root,
@@ -29,4 +29,4 @@ def test_repo_root_python_prefers_checkout_src_without_pythonpath():
     )
 
     imported = Path(result.stdout.strip())
-    assert imported == repo_root / "src" / "clau_decode" / "__init__.py"
+    assert imported == repo_root / "src" / "agent_decoder" / "__init__.py"
