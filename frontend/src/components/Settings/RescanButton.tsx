@@ -32,7 +32,7 @@ export function RescanButton() {
         {rescanStatus === "scanning" ? "Scanning…" : rescanStatus === "done" ? "Done ✓" : "Force rescan"}
       </button>
       <div style={HINT_STYLE}>
-        Re-reads every configured data path for new or changed sessions. Use this if you edited a session JSONL outside clau-decode, or if a session you expect to see isn't appearing.
+        Re-reads every configured data path for new or changed sessions. Use this if you edited a session JSONL outside agent-decoder, or if a session you expect to see isn't appearing.
       </div>
     </div>
   );

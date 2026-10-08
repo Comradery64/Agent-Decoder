@@ -13,9 +13,9 @@ from pathlib import Path
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from clau_decode.db import Database
-from clau_decode.models import AppConfig, Project
-from clau_decode.providers.codex import CodexAdapter, _codex_project
+from agent_decoder.db import Database
+from agent_decoder.models import AppConfig, Project
+from agent_decoder.providers.codex import CodexAdapter, _codex_project
 
 FIXTURES = Path(__file__).parent / "fixtures" / "codex"
 FIXTURE = FIXTURES / "sample_rollout.jsonl"
@@ -50,8 +50,8 @@ async def _seed_db(db_path: Path) -> None:
 
 
 def _make_app(db_path: Path, config: AppConfig | None = None):
-    from clau_decode.config import load_config
-    from clau_decode.server import create_app
+    from agent_decoder.config import load_config
+    from agent_decoder.server import create_app
 
     return create_app(config or load_config(), db_path)
 

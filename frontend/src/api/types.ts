@@ -236,7 +236,7 @@ export interface HostInfo {
   platform: "darwin" | "linux" | "win32" | string;
   client_host: string | null;
   // App version, sourced from the backend's single source of truth
-  // (clau_decode.__version__). Shown in Settings ▸ About.
+  // (agent_decoder.__version__). Shown in Settings ▸ About.
   version: string;
 }
 
@@ -507,7 +507,7 @@ export interface PtyNativeStateEvent {
 // Phase-0 ownership snapshot (pty-ownership-plan.md). Driven by the
 // hybrid pgrep + lsof detector on the BE; reports who, if anyone, is
 // already attached to the session id.
-//   ours     — a live PtyChannel exists in THIS clau-decode instance.
+//   ours     — a live PtyChannel exists in THIS agent-decoder instance.
 //   terminal — at least one foreign claude process is attached.
 //   idle     — no one is attached.
 export type PtyOwnershipStatus = "ours" | "terminal" | "idle";
@@ -523,7 +523,7 @@ export interface PtyOwnership {
 }
 
 export interface PtyForeignOwner {
-  kind: string; // "clau-decode" | "claude-wrapper" | …
+  kind: string; // "agent-decoder" | "claude-wrapper" | …
   pid: number;
   hostname: string;
   ui_endpoint: string | null;

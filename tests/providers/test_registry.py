@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from clau_decode.models import AppConfig, Message, Project, Session
-from clau_decode.providers import registry
-from clau_decode.providers.base import ProviderAdapter, ProviderCaps
+from agent_decoder.models import AppConfig, Message, Project, Session
+from agent_decoder.providers import registry
+from agent_decoder.providers.base import ProviderAdapter, ProviderCaps
 
 
 # ---------------------------------------------------------------------------

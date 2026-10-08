@@ -1,12 +1,17 @@
-<h1 align="center">Clau-Decode</h1>
+<h1 align="center">Agent Decoder R.I.N.G.</h1>
 
 <p align="center">
-  <em>Browse, search, and analyze your AI coding assistant chat history — entirely local, entirely private.</em>
+  <strong>Replay, Inspect, Navigate, Grep.</strong><br>
+  <em>Decode your agents' secret messages. "Send 10¢ and a box top!"</em>
 </p>
 
 <p align="center">
-  <a href="https://github.com/Comradery64/Clau-Decode/actions/workflows/ci.yml">
-    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Comradery64/Clau-Decode/ci.yml?branch=main&label=CI&style=flat-square">
+  Browse, search, and analyze your AI coding assistant chat history — entirely local, entirely private.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Comradery64/Agent-Decoder/actions/workflows/ci.yml">
+    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Comradery64/Agent-Decoder/ci.yml?branch=main&label=CI&style=flat-square">
   </a>
   <a href="LICENSE">
     <img alt="License" src="https://img.shields.io/badge/license-FSL--1.1--Apache--2.0-blue?style=flat-square">
@@ -14,7 +19,7 @@
   <a href="pyproject.toml">
     <img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square">
   </a>
-  <a href="https://github.com/Comradery64/Clau-Decode/blob/main/CHANGELOG.md">
+  <a href="https://github.com/Comradery64/Agent-Decoder/blob/main/CHANGELOG.md">
     <img alt="Changelog" src="https://img.shields.io/badge/changelog-keep--a--changelog-orange?style=flat-square">
   </a>
 </p>
@@ -22,24 +27,24 @@
 <p align="center">
   <video
     src="https://github.com/user-attachments/assets/6f5a9a09-fbab-467f-82b1-c2e642dc8726"
-    poster="https://github.com/Comradery64/Clau-Decode/raw/main/docs/demo-poster.jpg"
+    poster="https://github.com/Comradery64/Agent-Decoder/raw/main/docs/demo-poster.jpg"
     controls
     muted
     playsinline
     width="820">
     <a href="https://github.com/user-attachments/assets/6f5a9a09-fbab-467f-82b1-c2e642dc8726">
-      <img src="https://github.com/Comradery64/Clau-Decode/raw/main/docs/demo-poster.jpg" alt="Clau-Decode demo — click to play" width="820">
+      <img src="https://github.com/Comradery64/Agent-Decoder/raw/main/docs/demo-poster.jpg" alt="Agent Decoder demo — click to play" width="820">
     </a>
   </video>
 </p>
 
 ---
 
-## Why Clau-Decode?
+## Why Agent Decoder?
 
 Your AI coding assistant writes a small mountain of JSONL session files into
 `~/.claude/projects/` — useful, but unreadable and impossible to search by hand.
-Clau-Decode reads those files locally, indexes them into SQLite, and serves a
+Agent Decoder reads those files locally, indexes them into SQLite, and serves a
 fast browser UI with full-text search, conversation rendering, analytics, and a
 recap engine.
 
@@ -48,22 +53,22 @@ recap engine.
 ```bash
 # Install as an isolated tool — its own virtualenv, on your PATH, nothing
 # touches your system Python. Use whichever you already have:
-uv tool install git+https://github.com/Comradery64/Clau-Decode.git
+uv tool install git+https://github.com/Comradery64/Agent-Decoder.git
 # or:
-pipx install git+https://github.com/Comradery64/Clau-Decode.git
+pipx install git+https://github.com/Comradery64/Agent-Decoder.git
 
-clau-decode                 # opens http://localhost:4242
+ring                 # opens http://localhost:4242
 
 # update later — re-pull the latest from main (git installs need --force;
 # plain `upgrade`/`reinstall` won't fetch new commits):
-uv tool install --force git+https://github.com/Comradery64/Clau-Decode.git
+uv tool install --force git+https://github.com/Comradery64/Agent-Decoder.git
 # or:
-pipx install --force git+https://github.com/Comradery64/Clau-Decode.git
+pipx install --force git+https://github.com/Comradery64/Agent-Decoder.git
 ```
 
 Requires Python 3.10+. The wheel ships the pre-built frontend, so **no Node.js is needed** — only for development. All data stays on your machine — no telemetry.
 
-> Just trying it out? Run without installing: `uvx --from git+https://github.com/Comradery64/Clau-Decode.git clau-decode`
+> Just trying it out? Run without installing: `uvx --from git+https://github.com/Comradery64/Agent-Decoder.git ring`
 > Prefer not to install? Run it straight from a clone — see [Development](#development).
 > Advanced: `pip install` works too, but only **inside an activated virtualenv** — never your system/Homebrew Python (PEP 668 will block it, and a global install can shadow other checkouts).
 
@@ -172,11 +177,11 @@ git fetch origin && git reset --hard origin/main
 
 | Command | Description |
 |---------|-------------|
-| `clau-decode` | Launch the web UI (default) |
-| `clau-decode scan` | Rescan and print summary |
-| `clau-decode today` | Show today's token usage and cost |
-| `clau-decode stats` | Print statistical metrics |
-| `clau-decode tips` | Print optimization tips |
+| `ring` | Launch the web UI (default) |
+| `ring scan` | Rescan and print summary |
+| `ring today` | Show today's token usage and cost |
+| `ring stats` | Print statistical metrics |
+| `ring tips` | Print optimization tips |
 
 ### Keyboard shortcuts
 
@@ -194,7 +199,7 @@ git fetch origin && git reset --hard origin/main
 
 ## Configuration
 
-Settings are saved to `~/.config/clau-decode/config.json`. Edit them in the UI,
+Settings are saved to `~/.config/agent-decoder/config.json`. Edit them in the UI,
 or directly:
 
 ```json
@@ -207,14 +212,14 @@ or directly:
 }
 ```
 
-The session index lives at `~/.local/share/clau-decode/index.db` (durable, so it
-survives cache clears). To force a full rescan, run `clau-decode --force-refresh` —
+The session index lives at `~/.local/share/agent-decoder/index.db` (durable, so it
+survives cache clears). To force a full rescan, run `ring --force-refresh` —
 prefer this over deleting the DB, which also discards stars, archives, and custom
 titles.
 
 ## Architecture
 
-Clau-Decode is a local-first FastAPI server that scans your AI coding
+Agent Decoder is a local-first FastAPI server that scans your AI coding
 assistant's JSONL session files into a SQLite index, serves a React +
 TypeScript SPA, and drives the Claude CLI through a hidden PTY for in-app
 sessions.
@@ -224,17 +229,17 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md) for a system diagram and deeper notes.
 ## Development
 
 ```bash
-git clone https://github.com/Comradery64/Clau-Decode
-cd Clau-Decode
+git clone https://github.com/Comradery64/Agent-Decoder
+cd Agent Decoder
 
 # Install backend deps (into an isolated .venv) + build the frontend
 make dev                      # = uv sync && build frontend
 
 # Run the app from source — in the project venv, so it always runs THIS
 # checkout (no global install, no shadowing):
-uv run clau-decode --no-open
+uv run ring --no-open
 # equivalently, as a module from the checkout root:
-uv run python -m clau_decode --no-open
+uv run python -m agent_decoder --no-open
 # (make run wraps this)
 
 # Run tests
@@ -271,9 +276,9 @@ process in [`SECURITY.md`](SECURITY.md) — do **not** open a public issue.
 
 ## Acknowledgements
 
-Clau-Decode is **inspired by, and built around the file format of, [Claude](https://www.anthropic.com/claude) and Claude Code from [Anthropic](https://www.anthropic.com/)**. This project is not affiliated with, endorsed by, or sponsored by Anthropic, PBC. *Claude* and *Claude Code* are trademarks of Anthropic, PBC; all references in this project are nominative.
+Agent Decoder is **inspired by, and built around the file format of, [Claude](https://www.anthropic.com/claude) and Claude Code from [Anthropic](https://www.anthropic.com/)**. This project is not affiliated with, endorsed by, or sponsored by Anthropic, PBC. *Claude* and *Claude Code* are trademarks of Anthropic, PBC; all references in this project are nominative.
 
-> *A personal note from the author* — I didn't write the code in this repository or build any of the underlying tools. I sat at my computer, typed into it, and kept asking it for more. The actual line-by-line authoring was done by AI coding assistants — Anthropic's [Claude](https://www.anthropic.com/claude) (Sonnet and Opus) and [Z.ai](https://z.ai/)'s GLM-5.1, with the latter doing a substantial share of the heavy lifting alongside them. They aren't in the lists below because they're AI models rather than libraries, but they deserve named credit here. The projects, products, and people below did the rest of the real work that made Clau-Decode possible:
+> *A personal note from the author* — I didn't write the code in this repository or build any of the underlying tools. I sat at my computer, typed into it, and kept asking it for more. The actual line-by-line authoring was done by AI coding assistants — Anthropic's [Claude](https://www.anthropic.com/claude) (Sonnet and Opus) and [Z.ai](https://z.ai/)'s GLM-5.1, with the latter doing a substantial share of the heavy lifting alongside them. They aren't in the lists below because they're AI models rather than libraries, but they deserve named credit here. The projects, products, and people below did the rest of the real work that made Agent Decoder possible:
 
 **Backend (Python)**
 
@@ -335,7 +340,7 @@ The Native view ships these monospace fonts so the in-app font picker works on a
 - [Ruff](https://docs.astral.sh/ruff/) and [pre-commit](https://pre-commit.com/) — code style and pre-commit hooks
 - [Editorconfig](https://editorconfig.org/) — consistent indentation across editors
 
-Every project listed above is independently licensed by its respective authors; check each project's repository for terms. If we've missed an attribution, please [open an issue](https://github.com/Comradery64/Clau-Decode/issues).
+Every project listed above is independently licensed by its respective authors; check each project's repository for terms. If we've missed an attribution, please [open an issue](https://github.com/Comradery64/Agent-Decoder/issues).
 
 ## License
 

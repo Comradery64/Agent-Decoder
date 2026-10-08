@@ -110,7 +110,7 @@ describe("createEventSource — ephemeral_pair_persisted SSE dispatch", () => {
 
     const handler = vi.fn();
     const listener = (e: Event) => handler((e as CustomEvent).detail);
-    window.addEventListener("clau-decode:ephemeral-pair-persisted", listener);
+    window.addEventListener("agent-decoder:ephemeral-pair-persisted", listener);
 
     act(() => {
       emit("ephemeral-pair-persisted", {
@@ -121,7 +121,7 @@ describe("createEventSource — ephemeral_pair_persisted SSE dispatch", () => {
       });
     });
 
-    window.removeEventListener("clau-decode:ephemeral-pair-persisted", listener);
+    window.removeEventListener("agent-decoder:ephemeral-pair-persisted", listener);
 
     expect(handler).toHaveBeenCalledTimes(1);
     expect(handler).toHaveBeenCalledWith({
@@ -277,7 +277,7 @@ describe("ephemeral-pair-persisted event triggers API refetch", () => {
     // a hook that subscribes. We confirm the event arrives on the bus.
     const receivedEvents: unknown[] = [];
     const off = (e: Event) => receivedEvents.push((e as CustomEvent).detail);
-    window.addEventListener("clau-decode:ephemeral-pair-persisted", off);
+    window.addEventListener("agent-decoder:ephemeral-pair-persisted", off);
 
     act(() => {
       emit("ephemeral-pair-persisted", {
@@ -288,7 +288,7 @@ describe("ephemeral-pair-persisted event triggers API refetch", () => {
       });
     });
 
-    window.removeEventListener("clau-decode:ephemeral-pair-persisted", off);
+    window.removeEventListener("agent-decoder:ephemeral-pair-persisted", off);
     expect(receivedEvents).toHaveLength(1);
     expect((receivedEvents[0] as { input_id: number }).input_id).toBe(7);
   });

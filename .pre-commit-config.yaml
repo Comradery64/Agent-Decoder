@@ -1,4 +1,4 @@
-# Pre-commit hooks for clau-decode.
+# Pre-commit hooks for agent-decoder.
 # Install once with `pre-commit install`; run on demand with `pre-commit run --all-files`.
 # pre-commit autoupdate will refresh these revs.
 

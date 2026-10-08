@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import type { AppConfig, Recap } from "../../../api/types";
 import { api } from "../../../api/client";
-import { readClauDecodeSubmit } from "../../../utils/localStorage";
+import { readAgentDecoderSubmit } from "../../../utils/localStorage";
 
 // How far apart the session's latest activity (assistant or user message
-// timestamp) and our last clau-decode submit can be before we conclude
+// timestamp) and our last agent-decoder submit can be before we conclude
 // "Claude Code CLI drove the last turn, not us." 30 minutes comfortably
 // covers slow backends (zai up to ~7 min observed) and chained tool
 // calls. If CLI activity happens within this window of our submit, we'll
-// false-positive — but in practice you're either using clau-decode or
+// false-positive — but in practice you're either using agent-decoder or
 // you're not, so the overlap case is rare. Upgrade to per-message
 // provenance if it becomes a real problem.
 const OURS_WINDOW_MS = 30 * 60_000;
@@ -19,7 +19,7 @@ const OURS_WINDOW_MS = 30 * 60_000;
 const MIN_MESSAGE_COUNT_FOR_RECAP = 4;
 
 // Hover-debounce. Unlike Claude Code (where opening a tab is a clear
-// "I'm here now" signal), clau-decode users navigate sidebar entries
+// "I'm here now" signal), agent-decoder users navigate sidebar entries
 // in transit — clicking through to find the right session. Don't burn
 // a recap-generation call until they've actually settled on a session.
 const RECAP_DWELL_MS = 3000;
@@ -128,10 +128,10 @@ export function useRecaps(
     }).catch(() => {});
 
     // "Ours-vs-CLI" gate: only auto-recap when the session's latest
-    // activity falls within ``OURS_WINDOW_MS`` of our last clau-decode
+    // activity falls within ``OURS_WINDOW_MS`` of our last agent-decoder
     // submit. If the session has been driven by Claude Code CLI more
     // recently than us, the gap blows past the window and we stay quiet.
-    const lastSubmitMs = readClauDecodeSubmit(sid);
+    const lastSubmitMs = readAgentDecoderSubmit(sid);
     const lastActivityMs = lastActivityAt ? Date.parse(lastActivityAt) : NaN;
     const lastTurnWasOurs = (
       lastSubmitMs != null

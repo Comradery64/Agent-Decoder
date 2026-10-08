@@ -19,7 +19,7 @@ export function Hero({ totalSessions }: { totalSessions: number }) {
           color: "var(--text-primary)",
           letterSpacing: "-0.01em",
         }}>
-          Clau<span style={{ color: "var(--accent-orange)" }}>-</span>Decode
+          Agent <span style={{ color: "var(--accent-orange)" }}>Decoder</span>
         </h1>
         <div style={{ fontSize: "14px", color: "var(--text-secondary)", marginTop: "6px" }}>
           {totalSessions > 0

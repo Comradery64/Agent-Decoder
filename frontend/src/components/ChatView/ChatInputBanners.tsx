@@ -153,7 +153,7 @@ export function ChatDisclaimer() {
         fontFamily: "var(--font-ui)",
       }}
     >
-      Clau-Decode is AI and can make mistakes. Please double-check responses.
+      Agent Decoder is AI and can make mistakes. Please double-check responses.
     </div>
   );
 }

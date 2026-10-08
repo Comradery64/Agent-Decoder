@@ -1,4 +1,4 @@
-"""Tests for ``clau_decode.drivers`` — base/registry pure units plus tmux
+"""Tests for ``agent_decoder.drivers`` — base/registry pure units plus tmux
 mechanics against a deterministic fake CLI.
 
 Layering of skips (so CI without tmux just skips the integration block):
@@ -6,7 +6,7 @@ Layering of skips (so CI without tmux just skips the integration block):
     everywhere — they monkeypatch ``shutil.which`` and never touch tmux.
   * Mechanics tests gate on a real ``tmux`` and drive ``fake_cli.py`` — fast,
     deterministic, no ``codex`` auth/network needed.
-  * The opt-in ``CLAU_CODEX_LIVE`` smoke spawns the *real* ``codex`` (auth +
+  * The opt-in ``AGENT_CODEX_LIVE`` smoke spawns the *real* ``codex`` (auth +
     network) and is skipped unless tmux+codex are present and the env is set.
 """
 
@@ -20,7 +20,7 @@ import uuid
 
 import pytest
 
-from clau_decode.drivers import (
+from agent_decoder.drivers import (
     DriverAvailability,
     DriverState,
     TmuxDriver,
@@ -29,8 +29,8 @@ from clau_decode.drivers import (
     codex_spawn_builder,
     supports_driving,
 )
-from clau_decode.drivers import registry as drv_registry
-from clau_decode.drivers import tmux_driver as tmux_mod
+from agent_decoder.drivers import registry as drv_registry
+from agent_decoder.drivers import tmux_driver as tmux_mod
 
 _HAS_TMUX = shutil.which("tmux") is not None
 _HAS_CODEX = shutil.which("codex") is not None
@@ -193,7 +193,7 @@ def _fake_driver(**kw) -> TmuxDriver:
         sid,
         cwd=os.getcwd(),
         spawn_command=[sys.executable, FAKE_CLI],
-        socket_name=f"clau-decode-test-{uuid.uuid4().hex[:8]}",
+        socket_name=f"agent-decoder-test-{uuid.uuid4().hex[:8]}",
         rows=24,
         cols=80,
         **kw,
@@ -353,8 +353,8 @@ async def test_capture_state_dead_when_no_session():
 
 
 @pytest.mark.skipif(
-    not (_HAS_TMUX and _HAS_CODEX and os.environ.get("CLAU_CODEX_LIVE")),
-    reason="set CLAU_CODEX_LIVE=1 with tmux+codex present to run the live smoke",
+    not (_HAS_TMUX and _HAS_CODEX and os.environ.get("AGENT_CODEX_LIVE")),
+    reason="set AGENT_CODEX_LIVE=1 with tmux+codex present to run the live smoke",
 )
 async def test_live_codex_spawn_and_capture():
     """Spawn the real codex TUI in tmux; confirm it comes up non-DEAD."""
@@ -363,7 +363,7 @@ async def test_live_codex_spawn_and_capture():
         sid,
         cwd=os.getcwd(),
         spawn_command=codex_spawn_builder(sandbox="read-only"),
-        socket_name=f"clau-decode-live-{uuid.uuid4().hex[:8]}",
+        socket_name=f"agent-decoder-live-{uuid.uuid4().hex[:8]}",
     )
     try:
         await d.spawn(cols=120, rows=40)

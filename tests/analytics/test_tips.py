@@ -1,6 +1,6 @@
 """Tests for analytics.tips — tip model, registry, and built-in rules."""
 
-from clau_decode.models import Message, TokenUsage, ToolUseBlock, ToolResultBlock
+from agent_decoder.models import Message, TokenUsage, ToolUseBlock, ToolResultBlock
 
 
 def _read_msg(id: str, path: str) -> Message:
@@ -45,12 +45,12 @@ class TestTipRegistry:
         return StubRule()
 
     def test_empty_registry_returns_no_tips(self):
-        from clau_decode.analytics.tips import TipRegistry
+        from agent_decoder.analytics.tips import TipRegistry
 
         assert TipRegistry().run([]) == []
 
     def test_collects_tips_from_all_rules(self):
-        from clau_decode.analytics.tips import Tip, TipRegistry
+        from agent_decoder.analytics.tips import Tip, TipRegistry
 
         t1 = Tip(rule_id="r1", severity="warning", title="A", detail="x", evidence=[])
         t2 = Tip(rule_id="r2", severity="info", title="B", detail="y", evidence=[])
@@ -62,7 +62,7 @@ class TestTipRegistry:
         assert {t.rule_id for t in tips} == {"r1", "r2"}
 
     def test_sorts_by_severity_error_first(self):
-        from clau_decode.analytics.tips import Tip, TipRegistry
+        from agent_decoder.analytics.tips import Tip, TipRegistry
 
         info = Tip(rule_id="r1", severity="info", title="I", detail="", evidence=[])
         warning = Tip(
@@ -79,13 +79,13 @@ class TestTipRegistry:
 
 class TestRepeatedFileReadRule:
     def test_no_tip_below_threshold(self):
-        from clau_decode.analytics.tips import RepeatedFileReadRule
+        from agent_decoder.analytics.tips import RepeatedFileReadRule
 
         msgs = [_read_msg(f"m{i}", "/foo/bar.py") for i in range(2)]
         assert RepeatedFileReadRule().check(msgs) == []
 
     def test_tip_at_threshold(self):
-        from clau_decode.analytics.tips import RepeatedFileReadRule
+        from agent_decoder.analytics.tips import RepeatedFileReadRule
 
         msgs = [_read_msg(f"m{i}", "/foo/bar.py") for i in range(3)]
         tips = RepeatedFileReadRule().check(msgs)
@@ -94,7 +94,7 @@ class TestRepeatedFileReadRule:
         assert "/foo/bar.py" in tips[0].evidence[0]
 
     def test_one_tip_per_offending_file(self):
-        from clau_decode.analytics.tips import RepeatedFileReadRule
+        from agent_decoder.analytics.tips import RepeatedFileReadRule
 
         msgs = [_read_msg(f"a{i}", "/a.py") for i in range(4)] + [
             _read_msg(f"b{i}", "/b.py") for i in range(3)
@@ -103,7 +103,7 @@ class TestRepeatedFileReadRule:
         assert len(tips) == 2
 
     def test_edit_resets_count(self):
-        from clau_decode.analytics.tips import RepeatedFileReadRule
+        from agent_decoder.analytics.tips import RepeatedFileReadRule
 
         # 2 reads, then edit, then 2 more reads — never reaches threshold of 3 in one run
         msgs = [
@@ -116,7 +116,7 @@ class TestRepeatedFileReadRule:
         assert RepeatedFileReadRule().check(msgs) == []
 
     def test_custom_threshold(self):
-        from clau_decode.analytics.tips import RepeatedFileReadRule
+        from agent_decoder.analytics.tips import RepeatedFileReadRule
 
         msgs = [_read_msg(f"m{i}", "/foo.py") for i in range(4)]
         # 4 reads with threshold=5 → no tip
@@ -132,7 +132,7 @@ class TestRepeatedFileReadRule:
         )
 
     def test_write_clears_flag(self):
-        from clau_decode.analytics.tips import RepeatedFileReadRule
+        from agent_decoder.analytics.tips import RepeatedFileReadRule
 
         # 3 reads (reaches threshold), then a write, then 2 more reads — no tip
         msgs = [
@@ -148,13 +148,13 @@ class TestRepeatedFileReadRule:
 
 class TestOversizedToolResultRule:
     def test_no_tip_below_threshold(self):
-        from clau_decode.analytics.tips import OversizedToolResultRule
+        from agent_decoder.analytics.tips import OversizedToolResultRule
 
         msg = _result_msg("m1", "x" * 10_000)
         assert OversizedToolResultRule().check([msg]) == []
 
     def test_tip_above_threshold(self):
-        from clau_decode.analytics.tips import OversizedToolResultRule
+        from agent_decoder.analytics.tips import OversizedToolResultRule
 
         msg = _result_msg("m1", "x" * 60_000)
         tips = OversizedToolResultRule().check([msg])
@@ -163,14 +163,14 @@ class TestOversizedToolResultRule:
         assert "60" in tips[0].evidence[0]
 
     def test_multiple_oversized_results(self):
-        from clau_decode.analytics.tips import OversizedToolResultRule
+        from agent_decoder.analytics.tips import OversizedToolResultRule
 
         msgs = [_result_msg(f"m{i}", "x" * (60_000 + i * 1_000)) for i in range(3)]
         tips = OversizedToolResultRule().check(msgs)
         assert len(tips) == 3
 
     def test_list_content_counted(self):
-        from clau_decode.analytics.tips import OversizedToolResultRule
+        from agent_decoder.analytics.tips import OversizedToolResultRule
 
         block = ToolResultBlock(
             tool_use_id="t1",
@@ -182,7 +182,7 @@ class TestOversizedToolResultRule:
         assert len(tips) == 1
 
     def test_custom_threshold(self):
-        from clau_decode.analytics.tips import OversizedToolResultRule
+        from agent_decoder.analytics.tips import OversizedToolResultRule
 
         msg = _result_msg("m1", "x" * 30_000)
         assert OversizedToolResultRule(threshold_chars=20_000).check([msg]) != []
@@ -190,7 +190,7 @@ class TestOversizedToolResultRule:
 
 class TestLowCacheHitRule:
     def test_no_tip_below_min_tokens(self):
-        from clau_decode.analytics.tips import LowCacheHitRule
+        from agent_decoder.analytics.tips import LowCacheHitRule
 
         # 50% cache hit (1k cache-read vs 1k regular input = 50%)
         msgs = [_asst_tokens("m1", input=1_000, cache_read=1_000)]
@@ -198,7 +198,7 @@ class TestLowCacheHitRule:
         assert LowCacheHitRule().check(msgs) == []
 
     def test_tip_when_cache_hit_low(self):
-        from clau_decode.analytics.tips import LowCacheHitRule
+        from agent_decoder.analytics.tips import LowCacheHitRule
 
         # ~2% cache hit across enough data
         msgs = [_asst_tokens("m1", input=10_000, cache_read=200)]
@@ -208,33 +208,33 @@ class TestLowCacheHitRule:
         assert tips[0].severity == "info"
 
     def test_no_tip_above_threshold(self):
-        from clau_decode.analytics.tips import LowCacheHitRule
+        from agent_decoder.analytics.tips import LowCacheHitRule
 
         # 20% cache hit — above 10% threshold
         msgs = [_asst_tokens("m1", input=8_000, cache_read=2_000)]
         assert LowCacheHitRule().check(msgs) == []
 
     def test_no_tip_when_insufficient_data(self):
-        from clau_decode.analytics.tips import LowCacheHitRule
+        from agent_decoder.analytics.tips import LowCacheHitRule
 
         # Only 500 total input tokens — not enough to draw conclusions
         msgs = [_asst_tokens("m1", input=500, cache_read=0)]
         assert LowCacheHitRule().check(msgs) == []
 
     def test_no_tip_when_no_messages(self):
-        from clau_decode.analytics.tips import LowCacheHitRule
+        from agent_decoder.analytics.tips import LowCacheHitRule
 
         assert LowCacheHitRule().check([]) == []
 
     def test_evidence_contains_ratio(self):
-        from clau_decode.analytics.tips import LowCacheHitRule
+        from agent_decoder.analytics.tips import LowCacheHitRule
 
         msgs = [_asst_tokens("m1", input=10_000, cache_read=200)]
         tip = LowCacheHitRule().check(msgs)[0]
         assert "%" in tip.evidence[0]
 
     def test_no_tip_when_ratio_at_threshold(self):
-        from clau_decode.analytics.tips import LowCacheHitRule
+        from agent_decoder.analytics.tips import LowCacheHitRule
 
         # exactly 10% — at threshold, no tip
         msgs = [
@@ -243,7 +243,7 @@ class TestLowCacheHitRule:
         assert LowCacheHitRule().check(msgs) == []
 
     def test_tip_just_below_threshold(self):
-        from clau_decode.analytics.tips import LowCacheHitRule
+        from agent_decoder.analytics.tips import LowCacheHitRule
 
         # 9.9% — just below threshold → tip fires
         msgs = [_asst_tokens("m1", input=9_090, cache_read=1_000)]  # ~9.9%

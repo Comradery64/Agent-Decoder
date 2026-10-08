@@ -1,6 +1,6 @@
 """Tests for TokenAnalyticsService."""
 
-from clau_decode.models import Message, TokenUsage
+from agent_decoder.models import Message, TokenUsage
 from datetime import datetime, timezone
 
 
@@ -31,7 +31,7 @@ SESSION_MESSAGES = [
 
 class TestTokenAnalyticsService:
     def setup_method(self):
-        from clau_decode.analytics.service import TokenAnalyticsService
+        from agent_decoder.analytics.service import TokenAnalyticsService
 
         self.svc = TokenAnalyticsService()
 
@@ -61,9 +61,9 @@ class TestAnalyticsRoutes:
         import tempfile
         from pathlib import Path
         from httpx import AsyncClient, ASGITransport
-        from clau_decode.server import create_app
-        from clau_decode.config import load_config
-        from clau_decode.db import Database
+        from agent_decoder.server import create_app
+        from agent_decoder.config import load_config
+        from agent_decoder.db import Database
 
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "test.db"

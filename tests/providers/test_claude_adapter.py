@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from clau_decode.models import AppConfig
-from clau_decode.providers import registry
-from clau_decode.providers.claude import ClaudeAdapter
+from agent_decoder.models import AppConfig
+from agent_decoder.providers import registry
+from agent_decoder.providers.claude import ClaudeAdapter
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
 
@@ -134,7 +134,7 @@ class TestParse:
         self, adapter: ClaudeAdapter, claude_layout: tuple[Path, Path]
     ) -> None:
         """Delegation must be faithful — same result as calling parse_session directly."""
-        from clau_decode.parser import parse_session
+        from agent_decoder.parser import parse_session
 
         _, session_path = claude_layout
         adapter_session, adapter_messages = adapter.parse(session_path)

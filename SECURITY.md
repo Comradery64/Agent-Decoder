@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Clau-Decode is in the 0.x series. Security fixes are applied to the latest minor version; older 0.x minors are not back-patched.
+Agent Decoder is in the 0.x series. Security fixes are applied to the latest minor version; older 0.x minors are not back-patched.
 
 | Version       | Supported |
 | ------------- | --------- |
@@ -13,7 +13,7 @@ Clau-Decode is in the 0.x series. Security fixes are applied to the latest minor
 
 Please report vulnerabilities **privately**, not in a public issue.
 
-Report it through GitHub's [private vulnerability reporting](https://github.com/Comradery64/Clau-Decode/security/advisories/new) — the repository's **Security → Report a vulnerability** tab.
+Report it through GitHub's [private vulnerability reporting](https://github.com/Comradery64/Agent-Decoder/security/advisories/new) — the repository's **Security → Report a vulnerability** tab.
 
 Include, at minimum:
 
@@ -30,7 +30,7 @@ What to expect:
 
 ## Scope and threat model
 
-Clau-Decode runs entirely on the user's machine and binds to `127.0.0.1` by default. There is no telemetry, no remote backend, and no authentication layer — the security model assumes the local user trusts processes running as themselves.
+Agent Decoder runs entirely on the user's machine and binds to `127.0.0.1` by default. There is no telemetry, no remote backend, and no authentication layer — the security model assumes the local user trusts processes running as themselves.
 
 The interesting attack surface is therefore narrow:
 

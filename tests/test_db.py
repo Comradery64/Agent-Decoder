@@ -6,12 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from clau_decode.models import Message, Project, Session, TextBlock, ToolUseBlock
+from agent_decoder.models import Message, Project, Session, TextBlock, ToolUseBlock
 
 
 @pytest.fixture
 async def db():
-    from clau_decode.db import Database
+    from agent_decoder.db import Database
 
     with tempfile.TemporaryDirectory() as tmp:
         db_path = Path(tmp) / "test.db"
@@ -366,7 +366,7 @@ class TestStats:
 
 class TestUsagePersistence:
     async def test_upsert_message_with_usage(self, db, sample_project, sample_session):
-        from clau_decode.models import TokenUsage
+        from agent_decoder.models import TokenUsage
 
         await db.upsert_project(sample_project)
         await db.upsert_session(sample_session)
@@ -413,8 +413,8 @@ class TestUsagePersistence:
 class TestPhase0Integration:
     async def test_full_pipeline_usage_fixture(self, db):
         """Parse session_with_usage.jsonl → DB → retrieve, assert tokens preserved."""
-        from clau_decode.parser import parse_session
-        from clau_decode.models import Project
+        from agent_decoder.parser import parse_session
+        from agent_decoder.models import Project
 
         fixture = Path(__file__).parent / "fixtures" / "session_with_usage.jsonl"
         project = Project(
@@ -706,7 +706,7 @@ class TestProviderMigration:
         """
         import aiosqlite
 
-        from clau_decode.db import Database
+        from agent_decoder.db import Database
 
         db_path = tmp_path / "old.db"
         async with aiosqlite.connect(db_path) as conn:
@@ -863,7 +863,7 @@ class TestIncrementalUpsert:
         self, db, sample_session, sample_messages
     ):
         """Same content, backfilled usage → hash changes → row is rewritten."""
-        from clau_decode.models import TokenUsage
+        from agent_decoder.models import TokenUsage
 
         await db.upsert_session(sample_session)
         await db.upsert_messages(sample_messages)

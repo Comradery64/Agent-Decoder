@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from httpx import ASGITransport, AsyncClient
 
-from clau_decode.models import AppConfig
-from clau_decode.update_check import fetch_latest_version, is_newer
+from agent_decoder.models import AppConfig
+from agent_decoder.update_check import fetch_latest_version, is_newer
 
 
 class TestIsNewer:
@@ -101,15 +101,15 @@ class TestFetchLatestVersion:
 
 class TestUpdateCheckEndpoint:
     def _make_app(self, tmp_path):
-        from clau_decode.server import create_app
+        from agent_decoder.server import create_app
 
         return create_app(AppConfig(), tmp_path / "test.db")
 
     async def test_reports_update_available(self, tmp_path, monkeypatch):
-        from clau_decode import __version__
+        from agent_decoder import __version__
 
         monkeypatch.setattr(
-            "clau_decode.server.fetch_latest_version",
+            "agent_decoder.server.fetch_latest_version",
             AsyncMock(return_value="999.0.0"),
         )
         app = self._make_app(tmp_path)
@@ -124,10 +124,10 @@ class TestUpdateCheckEndpoint:
         assert body["update_available"] is True
 
     async def test_reports_no_update_when_current(self, tmp_path, monkeypatch):
-        from clau_decode import __version__
+        from agent_decoder import __version__
 
         monkeypatch.setattr(
-            "clau_decode.server.fetch_latest_version",
+            "agent_decoder.server.fetch_latest_version",
             AsyncMock(return_value=__version__),
         )
         app = self._make_app(tmp_path)
@@ -139,7 +139,7 @@ class TestUpdateCheckEndpoint:
 
     async def test_reports_no_update_on_fetch_failure(self, tmp_path, monkeypatch):
         monkeypatch.setattr(
-            "clau_decode.server.fetch_latest_version",
+            "agent_decoder.server.fetch_latest_version",
             AsyncMock(return_value=None),
         )
         app = self._make_app(tmp_path)
@@ -154,7 +154,7 @@ class TestUpdateCheckEndpoint:
         """A second request within the cache window must not call
         fetch_latest_version again — PyPI-friendliness is the whole point."""
         mock_fetch = AsyncMock(return_value="999.0.0")
-        monkeypatch.setattr("clau_decode.server.fetch_latest_version", mock_fetch)
+        monkeypatch.setattr("agent_decoder.server.fetch_latest_version", mock_fetch)
         app = self._make_app(tmp_path)
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"

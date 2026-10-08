@@ -286,7 +286,7 @@ describe("ChatView submit lifecycle events", () => {
     expect(screen.getByTestId("btw-capture-active")).toBeInTheDocument();
 
     window.dispatchEvent(
-      new CustomEvent("clau-decode:pty-submit-completed", {
+      new CustomEvent("agent-decoder:pty-submit-completed", {
         detail: {
           session_id: "sess-lifecycle",
           kind: "btw",
@@ -315,12 +315,12 @@ describe("ChatView submit lifecycle events", () => {
   it("emits an error toast when a /btw submit times out", async () => {
     const toast = vi.fn();
     const listener = (e: Event) => toast((e as CustomEvent).detail);
-    window.addEventListener("clau-decode:toast", listener);
+    window.addEventListener("agent-decoder:toast", listener);
 
     render(<ChatView />);
 
     window.dispatchEvent(
-      new CustomEvent("clau-decode:pty-submit-completed", {
+      new CustomEvent("agent-decoder:pty-submit-completed", {
         detail: {
           session_id: "sess-lifecycle",
           kind: "btw",
@@ -338,7 +338,7 @@ describe("ChatView submit lifecycle events", () => {
       });
     });
 
-    window.removeEventListener("clau-decode:toast", listener);
+    window.removeEventListener("agent-decoder:toast", listener);
   });
 
   it("clears foreground optimistic activity when a slash command is acknowledged", async () => {
@@ -349,7 +349,7 @@ describe("ChatView submit lifecycle events", () => {
     expect(screen.getByTestId("optimistic-active")).toBeInTheDocument();
 
     window.dispatchEvent(
-      new CustomEvent("clau-decode:pty-submit-completed", {
+      new CustomEvent("agent-decoder:pty-submit-completed", {
         detail: {
           session_id: "sess-lifecycle",
           kind: "slash",
@@ -383,7 +383,7 @@ describe("ChatView submit lifecycle events", () => {
     expect(screen.getByTestId("optimistic-active")).toBeInTheDocument();
 
     window.dispatchEvent(
-      new CustomEvent("clau-decode:pty-native-state", {
+      new CustomEvent("agent-decoder:pty-native-state", {
         detail: {
           session_id: "sess-lifecycle",
           state: "dead",
@@ -464,7 +464,7 @@ describe("ChatView submit lifecycle events", () => {
 
     act(() => {
       window.dispatchEvent(
-        new CustomEvent("clau-decode:pty-native-state", {
+        new CustomEvent("agent-decoder:pty-native-state", {
           detail: {
             session_id: "sess-lifecycle",
             state: "native_input_required",
@@ -498,7 +498,7 @@ describe("ChatView submit lifecycle events", () => {
       render(<ChatView />);
 
       window.dispatchEvent(
-        new CustomEvent("clau-decode:pty-native-state", {
+        new CustomEvent("agent-decoder:pty-native-state", {
           detail: {
             session_id: "sess-lifecycle",
             state,
@@ -521,7 +521,7 @@ describe("ChatView submit lifecycle events", () => {
     render(<ChatView />);
 
     window.dispatchEvent(
-      new CustomEvent("clau-decode:pty-native-state", {
+      new CustomEvent("agent-decoder:pty-native-state", {
         detail: {
           session_id: "sess-lifecycle",
           state: "slash_palette_open",
@@ -547,7 +547,7 @@ describe("ChatView submit lifecycle events", () => {
 
     act(() => {
       window.dispatchEvent(
-        new CustomEvent("clau-decode:pty-native-state", {
+        new CustomEvent("agent-decoder:pty-native-state", {
           detail: {
             session_id: "sess-lifecycle",
             state: "dead",

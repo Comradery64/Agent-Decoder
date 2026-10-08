@@ -11,13 +11,13 @@ from pathlib import Path
 
 import pytest
 
-from clau_decode.models import (
+from agent_decoder.models import (
     ThinkingBlock,
     ToolResultBlock,
     ToolUseBlock,
 )
-from clau_decode.parser import build_message_tree
-from clau_decode.providers.codex import CodexAdapter
+from agent_decoder.parser import build_message_tree
+from agent_decoder.providers.codex import CodexAdapter
 
 FIXTURES = Path(__file__).parent.parent / "fixtures" / "codex"
 FIXTURE = FIXTURES / "sample_rollout.jsonl"

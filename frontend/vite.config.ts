@@ -5,7 +5,7 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: path.resolve(__dirname, "../src/clau_decode/static"),
+    outDir: path.resolve(__dirname, "../src/agent_decoder/static"),
     emptyOutDir: true,
     rollupOptions: {
       output: {

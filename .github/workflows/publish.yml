@@ -32,7 +32,7 @@ jobs:
         # deleted or overwritten.
         run: |
           TAG_VERSION="${GITHUB_REF_NAME#v}"
-          PKG_VERSION="$(grep -oP '(?<=^__version__ = ")[^"]+' src/clau_decode/__init__.py)"
+          PKG_VERSION="$(grep -oP '(?<=^__version__ = ")[^"]+' src/agent_decoder/__init__.py)"
           if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
             echo "::error::Tag v$TAG_VERSION does not match __version__ ($PKG_VERSION)"
             exit 1

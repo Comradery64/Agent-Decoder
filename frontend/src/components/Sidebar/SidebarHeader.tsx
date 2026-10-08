@@ -111,7 +111,7 @@ export function SidebarHeader({ collapsed }: { collapsed?: boolean }) {
           textAlign: "left" as const,
         }}
       >
-        Clau-Decode
+        Agent Decoder
       </button>
 
       {/* Action buttons — smooth max-width + opacity collapse in sync with sidebar */}

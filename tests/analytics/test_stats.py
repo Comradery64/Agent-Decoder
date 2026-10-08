@@ -1,11 +1,11 @@
 """Tests for analytics.stats — statistical distributions and scanners."""
 
-from clau_decode.models import Message, TokenUsage, ToolUseBlock
+from agent_decoder.models import Message, TokenUsage, ToolUseBlock
 
 
 class TestComputeStats:
     def test_basic_stats(self):
-        from clau_decode.analytics.stats import compute_stats
+        from agent_decoder.analytics.stats import compute_stats
 
         s = compute_stats([10, 20, 30, 40, 50])
         assert s["count"] == 5
@@ -15,21 +15,21 @@ class TestComputeStats:
         assert s["max"] == 50
 
     def test_p95_at_boundary(self):
-        from clau_decode.analytics.stats import compute_stats
+        from agent_decoder.analytics.stats import compute_stats
 
         values = list(range(1, 101))  # 1..100
         s = compute_stats(values)
         assert s["p95"] >= 95
 
     def test_single_value(self):
-        from clau_decode.analytics.stats import compute_stats
+        from agent_decoder.analytics.stats import compute_stats
 
         s = compute_stats([42])
         assert s["mean"] == 42.0
         assert s["p95"] == 42
 
     def test_empty_returns_none(self):
-        from clau_decode.analytics.stats import compute_stats
+        from agent_decoder.analytics.stats import compute_stats
 
         assert compute_stats([]) is None
 
@@ -50,7 +50,7 @@ def _user(id: str) -> Message:
 
 class TestPromptStatsScanner:
     def test_scans_prompt_totals(self):
-        from clau_decode.analytics.stats import PromptStatsScanner
+        from agent_decoder.analytics.stats import PromptStatsScanner
 
         msgs = [
             _user("u1"),
@@ -65,7 +65,7 @@ class TestPromptStatsScanner:
         assert result["input_tokens"]["max"] == 200
 
     def test_output_stats(self):
-        from clau_decode.analytics.stats import PromptStatsScanner
+        from agent_decoder.analytics.stats import PromptStatsScanner
 
         msgs = [
             _user("u1"),
@@ -77,7 +77,7 @@ class TestPromptStatsScanner:
         assert result["output_tokens"]["median"] == 100.0
 
     def test_no_prompts_returns_empty(self):
-        from clau_decode.analytics.stats import PromptStatsScanner
+        from agent_decoder.analytics.stats import PromptStatsScanner
 
         result = PromptStatsScanner().scan([])
         assert result["prompt_count"] == 0
@@ -97,7 +97,7 @@ class TestModelUsageScanner:
         )
 
     def test_groups_by_model(self):
-        from clau_decode.analytics.stats import ModelUsageScanner
+        from agent_decoder.analytics.stats import ModelUsageScanner
 
         msgs = [
             self._asst_model("a1", "claude-sonnet-4-6", 100, 20),
@@ -111,12 +111,12 @@ class TestModelUsageScanner:
         assert sonnet["input_tokens"] == 300
 
     def test_no_messages_returns_empty(self):
-        from clau_decode.analytics.stats import ModelUsageScanner
+        from agent_decoder.analytics.stats import ModelUsageScanner
 
         assert ModelUsageScanner().scan([]) == []
 
     def test_sorted_by_total_tokens_desc(self):
-        from clau_decode.analytics.stats import ModelUsageScanner
+        from agent_decoder.analytics.stats import ModelUsageScanner
 
         msgs = [
             self._asst_model("a1", "small-model", 10, 5),
@@ -134,7 +134,7 @@ class TestToolUsageScanner:
         return Message(id=id, session_id="s", role="assistant", content_blocks=blocks)
 
     def test_counts_tool_calls(self):
-        from clau_decode.analytics.stats import ToolUsageScanner
+        from agent_decoder.analytics.stats import ToolUsageScanner
 
         msgs = [
             self._msg_with_tools("m1", ["Bash", "Read", "Bash"]),
@@ -145,14 +145,14 @@ class TestToolUsageScanner:
         assert bash["count"] == 3
 
     def test_sorted_by_count_desc(self):
-        from clau_decode.analytics.stats import ToolUsageScanner
+        from agent_decoder.analytics.stats import ToolUsageScanner
 
         msgs = [self._msg_with_tools("m1", ["Bash", "Bash", "Read"])]
         result = ToolUsageScanner().scan(msgs)
         assert result[0]["tool"] == "Bash"
 
     def test_no_tools_returns_empty(self):
-        from clau_decode.analytics.stats import ToolUsageScanner
+        from agent_decoder.analytics.stats import ToolUsageScanner
 
         msg = Message(id="m1", session_id="s", role="assistant")
         assert ToolUsageScanner().scan([msg]) == []
@@ -164,7 +164,7 @@ class TestFileTouchScanner:
         return Message(id=id, session_id="s", role="assistant", content_blocks=[block])
 
     def test_counts_file_touches(self):
-        from clau_decode.analytics.stats import FileTouchScanner
+        from agent_decoder.analytics.stats import FileTouchScanner
 
         msgs = [
             self._msg_with_file_tool("m1", "Read", "/foo/bar.py"),
@@ -176,7 +176,7 @@ class TestFileTouchScanner:
         assert bar["count"] == 2
 
     def test_top_n_limit(self):
-        from clau_decode.analytics.stats import FileTouchScanner
+        from agent_decoder.analytics.stats import FileTouchScanner
 
         msgs = [
             self._msg_with_file_tool(f"m{i}", "Read", f"/foo/file{i}.py")
@@ -186,7 +186,7 @@ class TestFileTouchScanner:
         assert len(result) <= 10
 
     def test_ignores_tools_without_path(self):
-        from clau_decode.analytics.stats import FileTouchScanner
+        from agent_decoder.analytics.stats import FileTouchScanner
 
         block = ToolUseBlock(id="t1", name="Bash", input={"command": "ls"})
         msg = Message(id="m1", session_id="s", role="assistant", content_blocks=[block])
