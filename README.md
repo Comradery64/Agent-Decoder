@@ -38,6 +38,10 @@
   </video>
 </p>
 
+<p align="center">
+  <img src="docs/ad-poster.png" alt="Agent Decoder R.I.N.G. retro-futurist ad poster" width="360">
+</p>
+
 ---
 
 ## Why Agent Decoder?
