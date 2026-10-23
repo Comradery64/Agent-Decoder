@@ -1098,10 +1098,7 @@ def _guided(args: argparse.Namespace) -> int:
     if not sys.stdin.isatty():
         print("guided mode needs an interactive terminal. Use explicit flags:")
         print("  capture (old machine):  ring migrate --capture")
-        print(
-            "  merge   (new machine):  ring migrate --source <dir> "
-            "--apply --backup"
-        )
+        print("  merge   (new machine):  ring migrate --source <dir> --apply --backup")
         return 2
     bundle: Path = args.bundle
     phase = _detect_phase(bundle, args.dest_dir)
