@@ -82,7 +82,9 @@ def parse_query(query: str) -> ParsedQuery:
                 groups.append([])
             continue
 
-        term = _fts_term(val, quoted=val.startswith('"') and val.endswith('"') and len(val) > 1)
+        term = _fts_term(
+            val, quoted=val.startswith('"') and val.endswith('"') and len(val) > 1
+        )
         if term is None:
             continue
         (negs if neg else groups[-1]).append(term)

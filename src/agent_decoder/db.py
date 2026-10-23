@@ -1736,12 +1736,18 @@ class Database:
             return []
 
         msg_extra, msg_fp = filter_sql(
-            pq, role="f.role", project="s.project_id",
-            session="f.session_id", ts="m.timestamp",
+            pq,
+            role="f.role",
+            project="s.project_id",
+            session="f.session_id",
+            ts="m.timestamp",
         )
         eph_extra, eph_fp = filter_sql(
-            pq, role="e.role", project="s.project_id",
-            session="e.session_id", ts="e.timestamp",
+            pq,
+            role="e.role",
+            project="s.project_id",
+            session="e.session_id",
+            ts="e.timestamp",
         )
         proj_clause = " AND s.project_id = ?" if project_id is not None else ""
         proj_params: list = [project_id] if project_id is not None else []
