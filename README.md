@@ -25,17 +25,7 @@
 </p>
 
 <p align="center">
-  <video
-    src="https://github.com/user-attachments/assets/6f5a9a09-fbab-467f-82b1-c2e642dc8726"
-    poster="https://github.com/Comradery64/Agent-Decoder/raw/main/docs/demo-poster.jpg"
-    controls
-    muted
-    playsinline
-    width="820">
-    <a href="https://github.com/user-attachments/assets/6f5a9a09-fbab-467f-82b1-c2e642dc8726">
-      <img src="https://github.com/Comradery64/Agent-Decoder/raw/main/docs/demo-poster.jpg" alt="Agent Decoder demo — click to play" width="820">
-    </a>
-  </video>
+  <img src="docs/ad-poster.png" alt="Agent Decoder R.I.N.G. retro-futurist ad poster" width="360">
 </p>
 
 ---
