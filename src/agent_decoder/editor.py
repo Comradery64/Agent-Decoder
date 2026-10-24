@@ -9,7 +9,7 @@ The edit strategy:
      the original session UUID.  The session can resume as normal because it
      finds the expected file at the expected path.
 
-The backup file includes a ``clau-decode-backup`` metadata record so agent-decoder
+The backup file includes an ``agent-decoder-backup`` metadata record so agent-decoder
 can mark it ``is_fork = True`` (disabling "Open in Terminal" since its new UUID
 is unknown to the CLI's internal index).
 
