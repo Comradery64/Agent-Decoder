@@ -197,7 +197,7 @@ export default function SearchOverlay() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search conversations..."
+            placeholder={'Search conversations…  "phrase"  -exclude  role:user'}
             style={{
               flex: 1,
               border: "none",
