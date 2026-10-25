@@ -5,4 +5,4 @@
 #   * HTTP API          — /api/host-info returns it.
 #   * Settings ▸ About  — the frontend fetches it from that API (no copy in JS).
 # Bump this on every release (and tag the commit `vX.Y.Z` to match).
-__version__ = "0.3.2"
+__version__ = "0.3.5"
