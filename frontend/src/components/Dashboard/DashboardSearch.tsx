@@ -164,7 +164,7 @@ export function DashboardSearch() {
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Search sessions, messages, code…"
+          placeholder={'Search sessions, messages, code…  "phrase"  -exclude'}
           style={{
             flex: 1,
             border: "none",
