@@ -147,6 +147,32 @@ describe("useScrollController", () => {
     expect(el.scrollTop).toBe(1950); // must NOT have been re-snapped to 2000
   });
 
+  it("does not snap back after a scroll-up that follows a no-op follow-write at the bottom", async () => {
+    // Regression: a streaming follow-write while already at the bottom changes
+    // nothing, so the browser fires no scroll/scrollend to clear
+    // programmaticRef. Left stuck, onScroll ignored the reader's next
+    // scroll-up (keyboard / touch / scrollbar drag — no wheel event to unpin
+    // via onWheel), pinned stayed true, and the NEXT streamed update snapped
+    // them back to the bottom "a few moments" later.
+    const s1 = nextSessionId();
+    const el = makeContainer(2000, 300);
+    const { rerender } = render(<Harness el={el} sessionId={s1} detail={detail(s1)} />);
+    await settle(el);
+    expect(el.scrollTop).toBe(2000);
+
+    // Streamed update while at the bottom: follow-write is a no-op, so
+    // (like real Chrome) NO scroll/scrollend event is fired afterwards.
+    rerender(<Harness el={el} sessionId={s1} detail={{ id: s1 } as SessionDetail} />);
+
+    fireEvent.keyDown(window, { key: "PageUp" }); // input that is not a wheel
+    el.scrollTop = 1500;
+    fireEvent.scroll(el);
+
+    // Next streamed chunk arrives.
+    rerender(<Harness el={el} sessionId={s1} detail={{ id: s1 } as SessionDetail} />);
+    expect(el.scrollTop).toBe(1500); // must NOT snap back to the bottom
+  });
+
   it("re-engages follow once the reader scrolls back to the bottom", async () => {
     const s1 = nextSessionId();
     const el = makeContainer(2000, 300);
@@ -159,8 +185,10 @@ describe("useScrollController", () => {
     el.scrollTop = 1700; // back within SNAP_THRESHOLD_PX of bottom (2000-300=1700)
     fireEvent.scroll(el);
 
+    // New content streams in (grows the scrollable height), then the update lands.
+    Object.defineProperty(el, "scrollHeight", { value: 2100, configurable: true });
     rerender(<Harness el={el} sessionId={s1} detail={{ id: s1 } as SessionDetail} />);
-    expect(el.scrollTop).toBe(2000); // re-engaged follow snapped to the new bottom
+    expect(el.scrollTop).toBe(2100); // re-engaged follow snapped to the new bottom
   });
 
   it("does not snap back to bottom when a search result scrolls the reader away from it", async () => {
