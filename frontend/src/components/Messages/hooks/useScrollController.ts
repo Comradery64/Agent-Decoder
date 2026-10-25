@@ -16,6 +16,20 @@ function isNearBottom(top: number, height: number, clientHeight: number): boolea
   return height - top - clientHeight < clientHeight;
 }
 
+// Write scrollTop = bottom, flagging it as ours (programmaticRef) ONLY if the
+// write will actually move the view. A write that lands where we already are
+// fires no `scroll`/`scrollend`, so nothing would ever clear the flag — it
+// stays stuck true and onScroll then ignores the reader's next scroll-up
+// (never unpinning), so the following streamed update snaps them back to the
+// bottom. `>= max - 1` also covers browsers clamping scrollTop to
+// scrollHeight - clientHeight.
+function snapToBottom(container: HTMLElement, programmaticRef: { current: boolean }): void {
+  const max = container.scrollHeight - container.clientHeight;
+  if (container.scrollTop >= max - 1) return;
+  programmaticRef.current = true;
+  container.scrollTop = container.scrollHeight;
+}
+
 /**
  * Single owner of this session's scroll container: who is "pinned" to the
  * bottom, whose move is in flight, and where the reader left off last time.
@@ -74,10 +88,7 @@ export function useScrollController(
         container.scrollTop = top;
       }
     };
-    const scrollToBottomNow = () => {
-      programmaticRef.current = true;
-      container.scrollTop = container.scrollHeight;
-    };
+    const scrollToBottomNow = () => snapToBottom(container, programmaticRef);
 
     let pendingRaf = 0;
     const resettle = () => {
@@ -229,17 +240,13 @@ export function useScrollController(
     }
 
     pinnedRef.current = true;
-    programmaticRef.current = true;
-    container.scrollTop = container.scrollHeight;
+    snapToBottom(container, programmaticRef);
 
     const inner = container.firstElementChild;
     let ro: ResizeObserver | null = null;
     if (inner) {
       ro = new ResizeObserver(() => {
-        if (pinnedRef.current) {
-          programmaticRef.current = true;
-          container.scrollTop = container.scrollHeight;
-        }
+        if (pinnedRef.current) snapToBottom(container, programmaticRef);
       });
       ro.observe(inner);
     }
@@ -262,8 +269,7 @@ export function useScrollController(
     if (!pinnedRef.current) return;
     const container = containerRef?.current;
     if (!container) return;
-    programmaticRef.current = true;
-    container.scrollTop = container.scrollHeight;
+    snapToBottom(container, programmaticRef);
   }, [detail, sessionId, containerRef]);
 
   // Snap when the optimistic "thinking" indicator first appears. Bypasses
@@ -274,8 +280,7 @@ export function useScrollController(
     if (scrolledSessionRef.current !== sessionId) return;
     const container = containerRef?.current;
     if (!container) return;
-    programmaticRef.current = true;
-    container.scrollTop = container.scrollHeight;
+    snapToBottom(container, programmaticRef);
     pinnedRef.current = true;
   }, [optimisticActive, sessionId, containerRef]);
 

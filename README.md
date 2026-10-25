@@ -81,6 +81,22 @@ git fetch origin && git reset --hard origin/main
 - `Cmd+K` global search across every session — content, tool use, file paths, thinking blocks
 - Inline live-search bar on the home page for quick lookups
 - Results show highlighted excerpts and jump directly to the matching message
+- Query syntax (works in both search boxes):
+
+  | Type | Means |
+  |------|-------|
+  | `"exact phrase"` | match the words together, in order |
+  | `-word` / `-"a phrase"` | exclude messages containing it |
+  | `a OR b` | either term (plain spaces mean AND) |
+  | `deploy*` | prefix match |
+  | `role:user` / `-role:assistant` | only / not that role |
+  | `project:foo` / `-project:foo` | project id contains / doesn't contain `foo` |
+  | `session:<id>` | one session |
+  | `after:2026-01-01` `before:2026-02-01` | date range (ISO dates) |
+
+  Example: `"staging deploy" -rollback role:user after:2026-09-01`. A query needs at
+  least one positive term — `-word` or filters alone return nothing. Unknown
+  `key:` prefixes (like `http://x`) are searched as plain text.
 
 ### Conversation viewer
 - Rendered markdown with code syntax highlighting

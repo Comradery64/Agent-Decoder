@@ -14,9 +14,10 @@ from packaging.version import InvalidVersion, Version
 PYPI_JSON_URL_PREFIX = "https://pypi.org/pypi/"
 CHECK_TIMEOUT_S = 5.0
 
-# PyPI's project name, NOT the CLI command or Python package name (both stay
-# "agent-decoder"/"agent_decoder") — PyPI rejected "agent-decoder" as too similar
-# to an existing project, so the published distribution is "agent-decoder".
+# PyPI distribution name. The CLI command is "ring" and the Python package is
+# "agent_decoder"; the distribution name differs from both. (Before the rename
+# PyPI had rejected "clau-decode" as too similar to an existing project, which
+# is why the distribution was already published as "agent-decoder".)
 DEFAULT_PACKAGE = "agent-decoder"
 
 

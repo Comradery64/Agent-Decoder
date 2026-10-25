@@ -6,10 +6,16 @@ The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-10-24
+
 ### Changed
 
-- Renamed the project to **Agent Decoder R.I.N.G.** (Replay, Inspect, Navigate, Grep). The launcher is now `ring`; the `clau-decode` command is removed and the Python module is now `agent_decoder`.
+- **BREAKING: the `clau-decode` command is gone — launch with `ring`.** Renamed the project to **Agent Decoder R.I.N.G.** (Replay, Inspect, Navigate, Grep). The launcher is now `ring`; the Python module is now `agent_decoder`.
 - Config and index DB live in `agent-decoder/` dirs. Existing `clau-decode/` data is copied over on first run and left in place as a backup.
+
+### Fixed
+
+- Decoded view no longer snaps back to the bottom a few moments after you scroll up with the keyboard, touch, or scrollbar: a no-op follow-write at the bottom left an internal "programmatic scroll" flag stuck, so the next streamed update re-pinned you.
 
 ### Added
 
@@ -247,10 +253,12 @@ Initial public release.
 
 - License changed from MIT to [FSL-1.1-Apache-2.0](LICENSE). All prior unreleased history was developed under MIT; the 0.1.0 release and everything after it ship under FSL-1.1-Apache-2.0, which converts to Apache 2.0 two years after each release.
 
-[0.3.2]: https://github.com/Comradery64/Clau-Decode/compare/v0.3.1.3...v0.3.2
-[0.3.1.2]: https://github.com/Comradery64/Clau-Decode/compare/v0.3.1.1...v0.3.1.2
-[0.3.1.1]: https://github.com/Comradery64/Clau-Decode/compare/v0.3.1...v0.3.1.1
-[0.3.1]: https://github.com/Comradery64/Clau-Decode/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/Comradery64/Clau-Decode/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/Comradery64/Clau-Decode/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/Comradery64/Clau-Decode/releases/tag/v0.1.0
+[Unreleased]: https://github.com/Comradery64/Agent-Decoder/compare/v0.3.5...HEAD
+[0.3.5]: https://github.com/Comradery64/Agent-Decoder/compare/v0.3.2...v0.3.5
+[0.3.2]: https://github.com/Comradery64/Agent-Decoder/compare/v0.3.1.3...v0.3.2
+[0.3.1.2]: https://github.com/Comradery64/Agent-Decoder/compare/v0.3.1.1...v0.3.1.2
+[0.3.1.1]: https://github.com/Comradery64/Agent-Decoder/compare/v0.3.1...v0.3.1.1
+[0.3.1]: https://github.com/Comradery64/Agent-Decoder/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/Comradery64/Agent-Decoder/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/Comradery64/Agent-Decoder/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/Comradery64/Agent-Decoder/releases/tag/v0.1.0
