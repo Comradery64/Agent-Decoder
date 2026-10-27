@@ -82,6 +82,7 @@ from .db import Database
 from .editor import swap_session
 from .events_bus import EventBroadcaster
 from .models import AppConfig, Profile
+from .operations.api import operations_router
 from .providers import register_builtins, registry
 from .reporter import export_json, export_markdown
 from .scanner import build_project_from_dir
@@ -807,6 +808,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
                     await _pty_manager.shutdown()
 
     app = FastAPI(title="Agent Decoder", version="0.1.0", lifespan=lifespan)
+    app.include_router(operations_router(db_path, _bus))
     # Session-detail responses are megabytes of JSON for old chats; gzip cuts
     # transfer time by ~10x. minimum_size avoids overhead for tiny payloads.
     # Localhost-only app, so there's no network to save bytes on: default

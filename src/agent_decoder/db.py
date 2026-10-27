@@ -480,6 +480,9 @@ class Database:
         # FTS5 triggers must be created outside executescript because
         # CREATE TRIGGER is not supported inside a multi-statement string
         # in some SQLite versions. Use separate execute calls instead.
+        from .operations.store import SCHEMA as OPERATIONS_SCHEMA
+
+        await self._conn.executescript(OPERATIONS_SCHEMA)
         await self._ensure_ephemeral_triggers()
 
         await self._conn.commit()
