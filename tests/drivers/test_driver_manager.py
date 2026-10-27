@@ -47,6 +47,23 @@ requires_tmux = pytest.mark.skipif(
 FAKE_CLI = os.path.join(os.path.dirname(__file__), "fake_cli.py")
 
 
+_test_sockets: list[str] = []
+
+
+def _test_socket():
+    name = f"agent-decoder-dm-{uuid.uuid4().hex[:8]}"
+    _test_sockets.append(name)
+    return name
+
+
+@pytest.fixture(autouse=True)
+def cleanup_isolated_sockets():
+    yield
+    for name in _test_sockets:
+        subprocess.run(["tmux", "-L", name, "kill-server"], capture_output=True)
+    _test_sockets.clear()
+
+
 def _patch_fake_build(monkeypatch):
     """Make DriverManager build TmuxDrivers wired to the fake CLI."""
 
@@ -55,11 +72,12 @@ def _patch_fake_build(monkeypatch):
     ):
         # `fresh`/`resume_uuid`/`model` only shape the real spawn argv; the fake
         # CLI ignores them. Consume them so they don't leak into TmuxDriver.
+        assert kw.pop("socket_name") == "agent-decoder-dm-owner-test"
         return TmuxDriver(
             session_id,
             cwd,
             [sys.executable, FAKE_CLI],
-            socket_name=f"agent-decoder-dm-{uuid.uuid4().hex[:8]}",
+            socket_name=_test_socket(),
             **kw,
         )
 
@@ -70,7 +88,7 @@ async def _make_manager(tmp_path) -> tuple[DriverManager, EventBroadcaster, Data
     db = await Database(tmp_path / "dm.db").__aenter__()
     await db.init_schema()
     bus = EventBroadcaster()
-    return DriverManager(db, bus), bus, db
+    return DriverManager(db, bus, tmux_socket="agent-decoder-dm-owner-test"), bus, db
 
 
 class _StubDriver:
@@ -229,8 +247,7 @@ async def test_no_idle_reaper_session_survives_idle(tmp_path, monkeypatch):
         await asyncio.sleep(1.5)  # idle; nothing should reap it
         assert dm.is_alive(sid), "driver session was killed while idle — regression"
         # No idle-timer bookkeeping exists on the manager at all.
-        assert not hasattr(dm, "_idle_kill_handle")
-        assert not hasattr(dm, "_on_idle_kill")
+        assert sid not in dm._channels  # direct-PTY timers cannot reap this provider
     finally:
         await dm.shutdown()
         await db.__aexit__(None, None, None)

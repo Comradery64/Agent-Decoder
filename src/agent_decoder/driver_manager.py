@@ -1,18 +1,8 @@
-"""DriverManager — session-keyed owner of live ``ProviderDriver`` instances.
+"""Codex execution policy used by the shared ExecutionManager.
 
-The driver-side analogue of ``PtyManager``: it owns one ``ProviderDriver`` per
-driven session, fans the driver's output bytes onto the same SSE shapes the
-Native transport already consumes (``pty_output_chunk`` / ``pty_native_state``),
-and serves Native-view hydration snapshots — so the existing provider-agnostic
-xterm.js renderer can drive a Codex session with no renderer changes.
-
-What it deliberately does NOT have: an idle reaper. tmux sessions are meant to
-**survive disconnect and idle** (that is the whole point of the tmux backend —
-it fixes "the 5-minute reaper kills long tasks"). Sessions end only on an
-explicit ``kill`` or clean ``shutdown``. Codex sessions never enter
-``PtyManager``, so they are structurally excluded from its disconnect-kill.
-
-Claude is intentionally never routed here; it keeps its tuned direct-PTY path.
+This mixin owns no independent manager lifecycle or locks. The shared owner
+initializes the provider records and dispatches operations; Claude policy
+continues to live in pty_runner to preserve its acknowledgment/capture hooks.
 """
 
 from __future__ import annotations
@@ -21,11 +11,9 @@ import asyncio
 import logging
 from typing import Any
 
-from .db import Database
 from .drivers import DriverState, ProviderDriver, build_driver
-from .events_bus import EventBroadcaster
 from .pty_native import encode_pty_output_chunk, encode_pty_snapshot
-from .pty_runner import DEFAULT_COLS, DEFAULT_ROWS
+from .pty_runner import DEFAULT_ROWS
 
 _log = logging.getLogger(__name__)
 
@@ -55,59 +43,19 @@ _STATE_TO_NATIVE: dict[DriverState, str] = {
 }
 
 
-class DriverManager:
-    """Owns ``ProviderDriver`` instances keyed by session id.
+class DriverSessionPolicy:
+    """Provider-specific Codex operations on the shared owner's records.
 
-    Mirrors the slice of ``PtyManager``'s surface the pty endpoints use
-    (``focus``/``submit``/``write_raw_input``/``resize``/``native_snapshot``/
-    ``status``/``kill``/``shutdown``) so the server can route driver-backed
-    providers here with a thin provider branch.
+    Common ownership, locks, focus selection, dispatch and lifecycle live on
+    ExecutionManager. These helpers retain Codex's terminal state vocabulary.
     """
 
-    def __init__(
-        self,
-        db: Database,
-        bus: EventBroadcaster,
-        *,
-        ui_endpoint: str | None = None,
-    ) -> None:
-        self._db = db
-        self._bus = bus
-        self._ui_endpoint = ui_endpoint
+    def _init_driver_sessions(self) -> None:
         self._drivers: dict[str, ProviderDriver] = {}
         self._providers: dict[str, str] = {}
-        self._session_locks: dict[str, asyncio.Lock] = {}
-        self._native_cols = DEFAULT_COLS
-        # Only the on-screen session's output is broadcast over SSE — mirrors
-        # PtyManager, so N background drivers don't firehose the main thread.
-        self._active_session_id: str | None = None
-        # Last (state, decoded_input_safe) the poller published per session —
-        # mirrors PtyManager's _last_native_state (pty_runner.py:1361) so a
-        # steady-state screen (e.g. still on the same approval prompt) emits
-        # once, not once per poll tick.
         self._last_driver_state: dict[str, tuple[str, bool]] = {}
-        # Serialises poller capture-pane calls. Kept SEPARATE from the
-        # per-session _session_locks so a slow capture-pane can't block
-        # submit/resize/write_raw_input on the same session.
         self._state_poll_lock = asyncio.Lock()
-        # One long-lived background task started on first focus(); cancelled
-        # in shutdown(). Gates emission to the active session only.
         self._state_poll_task: asyncio.Task[None] | None = None
-
-    # ------------------------------------------------------------------
-    # Config / locking
-    # ------------------------------------------------------------------
-
-    def set_native_cols(self, cols: int) -> None:
-        if cols > 0:
-            self._native_cols = cols
-
-    def _session_lock(self, session_id: str) -> asyncio.Lock:
-        lock = self._session_locks.get(session_id)
-        if lock is None:
-            lock = asyncio.Lock()
-            self._session_locks[session_id] = lock
-        return lock
 
     def has(self, session_id: str) -> bool:
         return session_id in self._drivers
@@ -221,9 +169,9 @@ class DriverManager:
                 if self._active_session_id == session_id:
                     self._active_session_id = None
                 # Release the leaked master fd / reap the dead attach client
-                # off the reader callback (kill-session is idempotent if gone).
+                # off the reader callback without terminating a surviving pane.
                 try:
-                    asyncio.get_running_loop().create_task(driver.kill())
+                    asyncio.get_running_loop().create_task(driver.detach())
                 except RuntimeError:  # pragma: no cover — no running loop
                     pass
 
@@ -233,7 +181,7 @@ class DriverManager:
     # Lifecycle
     # ------------------------------------------------------------------
 
-    async def focus(
+    async def _driver_focus(
         self,
         session_id: str,
         *,
@@ -254,6 +202,8 @@ class DriverManager:
         cols = self._native_cols
         eff_rows = rows if rows is not None else DEFAULT_ROWS
         async with self._session_lock(session_id):
+            if self._shutdown_started:
+                raise RuntimeError("ExecutionManager is shutting down")
             driver = self._drivers.get(session_id)
             if driver is None:
                 driver = build_driver(
@@ -267,6 +217,7 @@ class DriverManager:
                     on_dead=self._make_on_dead(session_id),
                     rows=eff_rows,
                     cols=cols,
+                    socket_name=self._tmux_socket,
                 )
                 self._drivers[session_id] = driver
                 self._providers[session_id] = provider
@@ -282,26 +233,26 @@ class DriverManager:
         # (Decoded-only / Split). No-op if already running.
         self._ensure_state_poller()
 
-    async def submit(self, session_id: str, content: str) -> None:
+    async def _driver_submit(self, session_id: str, content: str) -> None:
         async with self._session_lock(session_id):
             driver = self._drivers.get(session_id)
             if driver is None or not driver.is_alive():
                 raise RuntimeError(f"no live driver for session {session_id}")
             await driver.send_text(content)
 
-    async def write_raw_input(self, session_id: str, data: bytes) -> None:
+    async def _driver_write_raw_input(self, session_id: str, data: bytes) -> None:
         driver = self._drivers.get(session_id)
         if driver is None:
             raise RuntimeError(f"no driver for session {session_id}")
         await driver.write_input(data)
 
-    async def resize(self, session_id: str, rows: int, cols: int) -> None:
+    async def _driver_resize(self, session_id: str, rows: int, cols: int) -> None:
         driver = self._drivers.get(session_id)
         if driver is None:
             raise RuntimeError(f"no driver for session {session_id}")
         await driver.resize(cols=cols, rows=rows)
 
-    async def native_snapshot(self, session_id: str) -> dict[str, Any]:
+    async def _driver_native_snapshot(self, session_id: str) -> dict[str, Any]:
         driver = self._drivers.get(session_id)
         if driver is None:
             raise RuntimeError(f"no driver for session {session_id}")
@@ -324,7 +275,7 @@ class DriverManager:
             decoded_input_safe=(state == DriverState.IDLE),
         )
 
-    def status(self, session_id: str) -> dict[str, Any]:
+    def _driver_status(self, session_id: str) -> dict[str, Any]:
         driver = self._drivers.get(session_id)
         if driver is None:
             return {"alive": False, "provider": self._providers.get(session_id)}
@@ -334,7 +285,7 @@ class DriverManager:
             "backend": "tmux",
         }
 
-    async def kill(self, session_id: str) -> None:
+    async def _driver_kill(self, session_id: str) -> None:
         async with self._session_lock(session_id):
             driver = self._drivers.pop(session_id, None)
             self._providers.pop(session_id, None)
@@ -355,21 +306,29 @@ class DriverManager:
         """
         if old_session_id == new_session_id:
             return False
-        async with self._session_lock(old_session_id):
-            driver = self._drivers.pop(old_session_id, None)
-            provider = self._providers.pop(old_session_id, None)
+        # Stable lock ordering prevents reciprocal adoption deadlocks.
+        first, second = sorted((old_session_id, new_session_id))
+        async with self._session_lock(first), self._session_lock(second):
+            driver = self._drivers.get(old_session_id)
             if driver is None:
                 return False
+            if new_session_id in self._drivers or new_session_id in self._channels:
+                raise RuntimeError("cannot adopt an already managed session")
             if hasattr(driver, "rename"):
-                await driver.rename(new_session_id)  # type: ignore[attr-defined]
+                await driver.rename(new_session_id)
+            self._drivers.pop(old_session_id)
+            provider = self._providers.pop(old_session_id, None)
+            self._last_driver_state.pop(old_session_id, None)
             self._drivers[new_session_id] = driver
+            driver.set_on_chunk(self._make_on_chunk(new_session_id))
+            driver.set_on_dead(self._make_on_dead(new_session_id))
             if provider is not None:
                 self._providers[new_session_id] = provider
             if self._active_session_id == old_session_id:
                 self._active_session_id = new_session_id
         return True
 
-    async def shutdown(self) -> None:
+    async def _driver_shutdown(self) -> None:
         # Stop the background poller first so it can't capture_state() a
         # driver mid-kill and publish a stale state after shutdown begins.
         task = self._state_poll_task
@@ -382,6 +341,19 @@ class DriverManager:
                 pass
         for session_id in list(self._drivers.keys()):
             try:
-                await self.kill(session_id)
+                async with self._session_lock(session_id):
+                    driver = self._drivers.pop(session_id, None)
+                    if driver is not None:
+                        await driver.detach()
             except Exception as exc:  # pragma: no cover — defensive
-                _log.warning("driver: shutdown kill raised (%s): %s", session_id, exc)
+                _log.warning("driver: shutdown detach raised (%s): %s", session_id, exc)
+
+
+def __getattr__(name: str):
+    # Compatibility for extensions/tests importing the former owner. There is
+    # only one implementation and one instance in the server.
+    if name == "DriverManager":
+        from .execution_manager import ExecutionManager
+
+        return ExecutionManager
+    raise AttributeError(name)
