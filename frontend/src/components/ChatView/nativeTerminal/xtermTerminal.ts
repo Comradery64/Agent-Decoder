@@ -21,7 +21,10 @@ export function createNativeTerminal(options: NativeTerminalOptions): NativeTerm
   terminal.parser.registerCsiHandler({ final: "J" }, (params) => {
     if (params[0] !== 3) return false;
     const b = terminal.buffer.active;
-    return b.viewportY < b.baseY; // true = handled (swallowed)
+    const scrolledUp = b.viewportY < b.baseY;
+    // Diagnostic (no content): confirms in DevTools that the TUI really sends it.
+    if (scrolledUp) console.info("agent-decoder: ignored ESC[3J (erase scrollback) while scrolled up");
+    return scrolledUp; // true = handled (swallowed)
   });
   return terminal;
 }
