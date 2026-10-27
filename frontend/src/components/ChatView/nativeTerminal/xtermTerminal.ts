@@ -10,7 +10,20 @@ export type NativeTerminalOptions = ITerminalOptions;
 export type { ITheme };
 
 export function createNativeTerminal(options: NativeTerminalOptions): NativeTerminal {
-  return new Terminal(options);
+  const terminal = new Terminal(options);
+  // ESC[3J ("erase scrollback") makes xterm wipe the history AND reset the
+  // viewport to the bottom. A TUI that does a full clear on a tall repaint
+  // would otherwise yank a reader who scrolled up back down a few moments
+  // later and destroy what they were reading. Swallow it only while scrolled
+  // up; at the bottom it passes through, so a real /clear still clears. Using
+  // the parser hook (not a byte filter) means sequences split across PTY
+  // chunks are handled by xterm itself.
+  terminal.parser.registerCsiHandler({ final: "J" }, (params) => {
+    if (params[0] !== 3) return false;
+    const b = terminal.buffer.active;
+    return b.viewportY < b.baseY; // true = handled (swallowed)
+  });
+  return terminal;
 }
 
 export function createNativeFitAddon(): NativeFitAddon {
