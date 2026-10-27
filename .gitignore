@@ -52,5 +52,9 @@ demo-reel/
 # Keep the built static assets — they ship with the package
 !src/agent_decoder/static/
 
-# Local scratch/handoff docs — never published
+# Local scratch/handoff docs and agent config — never published
 docs/archive/
+/.handoff/
+/.internal-archive/
+/.claude/
+/CLAUDE.md
