@@ -226,19 +226,41 @@ interface TextBlockProps {
   style?: CSSProperties;
 }
 
+// One highlighter shared by every block. rehype-highlight builds a lowlight
+// instance (registering ~37 languages) each time its attacher runs, and
+// react-markdown runs attachers on every render — that alone cost ~0.5s per
+// session switch on long chats.
+const highlight = rehypeHighlight({ detect: true });
+const remarkPlugins = [remarkGfm];
+const rehypePlugins = [() => highlight];
+
+// Rendered markdown keyed by source text, so re-renders and switching back to
+// a session skip parsing + highlighting. ReactMarkdown (sync) is a pure
+// function, so its output is safe to reuse. Map order gives LRU eviction.
+const MAX_CACHED = 3000;
+const renderedByText = new Map<string, ReactElement>();
+
+function renderMarkdown(text: string): ReactElement {
+  let el = renderedByText.get(text);
+  if (el) {
+    renderedByText.delete(text);
+  } else {
+    el = ReactMarkdown({ remarkPlugins, rehypePlugins, components, children: text });
+    if (renderedByText.size >= MAX_CACHED) {
+      renderedByText.delete(renderedByText.keys().next().value!);
+    }
+  }
+  renderedByText.set(text, el);
+  return el;
+}
+
 export function TextBlock({ text, className, style }: TextBlockProps) {
   return (
     <div
       className={["prose-content", className].filter(Boolean).join(" ")}
       style={style}
     >
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[[rehypeHighlight, { detect: true, ignoreMissing: true }]]}
-        components={components}
-      >
-        {text}
-      </ReactMarkdown>
+      {renderMarkdown(text)}
     </div>
   );
 }
