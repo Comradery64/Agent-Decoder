@@ -6,6 +6,7 @@
 import { create } from "zustand";
 import type { HostInfo, Profile, ProviderInfo } from "../api/types";
 import { getChatIdFromRoute } from "../router";
+import { LS, lsGetRaw, lsSetRaw } from "../utils/localStorage";
 
 function initialChatId(): string | null {
   if (typeof window === "undefined") return null;
@@ -29,6 +30,7 @@ interface AppState {
   sidebarMode: SidebarMode;
   fileExplorerRoot: string | null;
   viewingFilePath: string | null;
+  artifactsOpen: boolean;
   sessionSortOrder: SessionSortOrder;
   showParentFolder: boolean;
   blocksExpanded: boolean;
@@ -79,6 +81,7 @@ interface AppState {
   setSidebarMode: (mode: SidebarMode) => void;
   setFileExplorerRoot: (path: string | null) => void;
   setViewingFilePath: (path: string | null) => void;
+  toggleArtifacts: () => void;
   setSessionSortOrder: (order: SessionSortOrder) => void;
   setShowParentFolder: (show: boolean) => void;
   toggleBlocksExpanded: () => void;
@@ -109,6 +112,7 @@ export const useAppStore = create<AppState>((set) => ({
   sidebarMode: "chat",
   fileExplorerRoot: null,
   viewingFilePath: null,
+  artifactsOpen: typeof window !== "undefined" && lsGetRaw(LS.ARTIFACTS_OPEN) === "1",
   sessionSortOrder: "recent",
   showParentFolder: false,
   blocksExpanded: false,
@@ -157,6 +161,11 @@ export const useAppStore = create<AppState>((set) => ({
   setSidebarMode: (mode) => set({ sidebarMode: mode }),
   setFileExplorerRoot: (path) => set({ fileExplorerRoot: path }),
   setViewingFilePath: (path) => set({ viewingFilePath: path }),
+  toggleArtifacts: () =>
+    set((s) => {
+      lsSetRaw(LS.ARTIFACTS_OPEN, s.artifactsOpen ? "0" : "1");
+      return { artifactsOpen: !s.artifactsOpen };
+    }),
   setSessionSortOrder: (order) => set({ sessionSortOrder: order }),
   setShowParentFolder: (show) => set({ showParentFolder: show }),
   toggleBlocksExpanded: () => set((s) => ({ blocksExpanded: !s.blocksExpanded })),
