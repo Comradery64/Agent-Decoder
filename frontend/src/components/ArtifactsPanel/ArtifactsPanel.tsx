@@ -111,9 +111,12 @@ function ArtifactCard({ artifact }: { artifact: Artifact }) {
 }
 
 export default function ArtifactsPanel() {
+  // Open state is read here, not in App, so toggling re-renders only this
+  // panel instead of the whole chat.
+  const open = useAppStore((s) => s.artifactsOpen);
   const sessionId = useAppStore((s) => s.selectedSessionId);
   // Re-key per session so the filter resets when switching chats.
-  return sessionId ? <ArtifactsList key={sessionId} sessionId={sessionId} /> : null;
+  return open && sessionId ? <ArtifactsList key={sessionId} sessionId={sessionId} /> : null;
 }
 
 function ArtifactsList({ sessionId }: { sessionId: string }) {

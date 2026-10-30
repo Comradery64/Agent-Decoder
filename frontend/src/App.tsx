@@ -52,7 +52,6 @@ export default function App() {
   const isHelpOpen = useAppStore((s) => s.isHelpOpen);
   const isShortcutsOpen = useAppStore((s) => s.isShortcutsOpen);
   const viewingFilePath = useAppStore((s) => s.viewingFilePath);
-  const artifactsOpen = useAppStore((s) => s.artifactsOpen);
   const activeProvider = useAppStore((s) => s.activeProvider);
 
   // Mirror activeProvider onto <html data-provider="..."> so CSS body/html
@@ -336,7 +335,7 @@ export default function App() {
             {chatIdFromUrl ? <ChatView /> : <Dashboard />}
           </ErrorBoundary>
         </div>
-        {chatIdFromUrl && artifactsOpen && (
+        {chatIdFromUrl && (
           <ErrorBoundary>
             <React.Suspense fallback={null}>
               <ArtifactsPanel />
