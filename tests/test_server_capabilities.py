@@ -164,8 +164,8 @@ async def test_pty_focus_codex_409_when_not_drivable(env, monkeypatch):
 
 async def test_pty_submit_codex_gate_opens_when_drivable(env, monkeypatch):
     # When drivable, the capability gate PASSES (no 409 capability_unsupported)
-    # and routes to the DriverManager. Without a lifespan the manager is None,
-    # so we expect 503 "driver manager not ready" — proof the gate opened.
+    # and routes to the shared ExecutionManager. Without a lifespan the manager is None,
+    # so we expect 503 "execution manager not ready" — proof the gate opened.
     _force_drivable(monkeypatch, True)
     app = _make_app(env["db_path"], AppConfig())
     async with AsyncClient(
@@ -175,7 +175,7 @@ async def test_pty_submit_codex_gate_opens_when_drivable(env, monkeypatch):
             "/api/pty/submit", json={"session_id": "codex-sess-1", "content": "hi"}
         )
     assert r.status_code == 503
-    assert "driver manager" in r.json()["detail"]
+    assert "execution manager" in r.json()["detail"]
 
 
 # Claude is never capability-gated (it owns its direct-PTY path). That
