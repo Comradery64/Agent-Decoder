@@ -54,14 +54,13 @@ from .recap_runner import generate_recap as _generate_recap
 from . import __version__
 from .pty_runner import (
     DEFAULT_ROWS,
-    PtyManager,
     PtyOwnershipConflict,
     PtySubmitInFlight,
     _session_conflict_pids,
     _unlink_fresh_foreign_sidecar,
 )
 from .pty_native import decode_terminal_input
-from .driver_manager import DriverManager
+from .execution_manager import ExecutionManager
 from .drivers import availability_for as _driver_availability
 from .drivers import supports_driving as _driver_supports
 from .analytics import fast as analytics_fast
@@ -432,10 +431,8 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
     # change to every connected SSE client via the broadcaster.
     _watch_queue: asyncio.Queue = asyncio.Queue()
     _bus = EventBroadcaster()
-    _pty_manager: PtyManager | None = None  # populated in lifespan
-    # DriverManager owns live ProviderDriver sessions (Codex via tmux). Claude
-    # never enters it — it keeps its direct-PTY path. Populated in lifespan.
-    _driver_manager: DriverManager | None = None
+    _pty_manager: ExecutionManager | None = None  # populated in lifespan
+    # ExecutionManager owns both providers and all live terminal resources.
     # Tombstone set: session ids that have been hard-deleted are recorded here
     # so that concurrent/queued scan tasks never re-upsert a deleted session.
     # Scoped to the create_app() closure — one set per app instance.
@@ -745,7 +742,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
         # Fold the WAL back into index.db and truncate index.db-wal on a timer.
         # SQLite's default wal_autocheckpoint is passive and only fires on
         # commit, so it is easily pinned by a held read snapshot — and the
-        # PtyManager/DriverManager connection below lives for the whole server
+        # ExecutionManager connection below lives for the whole server
         # lifetime. This dedicated short-lived connection owns no snapshot, so
         # TRUNCATE can shrink the WAL that autocheckpoint can't. Without it
         # index.db-wal grew to ~22 GB.
@@ -766,7 +763,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
             await _pricing_strat.refresh()
 
         asyncio.create_task(_refresh_pricing())
-        nonlocal _pty_manager, _driver_manager
+        nonlocal _pty_manager
         # ui_endpoint is written into Phase-1 lock sidecars so a peer
         # agent-decoder reading the lock can render "open in UI at ..."
         # in its take-over banner. Best-effort — config.host of
@@ -781,28 +778,16 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
         # contexts; SQLite WAL mode keeps the long-lived + per-request
         # connections from contending.
         async with Database(db_path) as _pty_db:
-            _pty_manager = PtyManager(
+            _pty_manager = ExecutionManager(
                 _pty_db,
                 _bus,
                 ui_endpoint=f"http://{_ui_host}:{config.port}",
             )
             app.state.pty_manager = _pty_manager
             _pty_manager.set_native_cols(_state["config"].native_pty_cols)
-            # DriverManager shares the bus + a long-lived DB handle. No idle
-            # reaper: tmux-backed sessions survive disconnect/idle by design,
-            # so the "5-min reaper kills long tasks" bug cannot recur here.
-            _driver_manager = DriverManager(
-                _pty_db,
-                _bus,
-                ui_endpoint=f"http://{_ui_host}:{config.port}",
-            )
-            app.state.driver_manager = _driver_manager
-            _driver_manager.set_native_cols(_state["config"].native_pty_cols)
             try:
                 yield
             finally:
-                if _driver_manager is not None:
-                    await _driver_manager.shutdown()
                 if _pty_manager is not None:
                     await _pty_manager.shutdown()
 
@@ -821,10 +806,10 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
     app.state.pending_sessions = {}
     app.state.pending_sessions_lock = asyncio.Lock()
 
-    # Session ids currently routed to the DriverManager (driver-backed, e.g.
-    # Codex). Populated on a successful driver focus; cleared on kill. Hot-path
-    # native endpoints (input/resize/snapshot/status/kill) consult this O(1)
-    # set to pick the manager without a per-call DB lookup.
+    # Session ids currently using the Codex execution policy (driver-backed, e.g.
+    # Codex). Populated on successful focus; cleared on kill/adoption. This
+    # identifies provider-specific blur/adoption behavior; terminal endpoints
+    # dispatch through the shared manager without a second owner.
     app.state.driver_sessions = set()
 
     # LRU cache of pre-serialized SessionDetail responses, keyed by session id
@@ -1362,8 +1347,8 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
     # Provider capability gating (Phase 4b) — effective caps = static
     # ProviderCaps AND runtime drivability. Driving-gated caps (send/resume)
     # are ANDed with the backend availability ONLY for driver-backed providers
-    # (Codex). Claude is not driver-backed — it sends over its own direct-PTY
-    # path, so its caps stand on their own and stay fully available on POSIX.
+    # (Codex). Claude uses the shared manager with its established input policy.
+    # Its direct PTY fallback keeps it available on POSIX without tmux.
     # -----------------------------------------------------------------------
 
     def _provider_availability(provider: str) -> dict:
@@ -1480,10 +1465,10 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
                 continue
             if not real_id or real_id == placeholder_id:
                 continue
-            if _driver_manager is None:
+            if _pty_manager is None:
                 return
             try:
-                rekeyed = await _driver_manager.rekey(placeholder_id, real_id)
+                rekeyed = await _pty_manager.rekey(placeholder_id, real_id)
             except Exception as exc:  # pragma: no cover — defensive
                 _log.warning("codex adopt: rekey raised: %s", exc)
                 return
@@ -1507,7 +1492,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
 
         A brand-new Codex chat has no rollout yet, so its provider lives only
         in the pending-session map (bin_name="codex"). Consult it so focus/submit
-        route to the DriverManager and spawn fresh codex instead of treating the
+        route to the Codex execution policy and spawn fresh codex instead of treating the
         empty chat as Claude.
         """
         async with Database(db_path) as db:
@@ -2087,18 +2072,10 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
         if _pty_manager is not None:
             for session_id in req.session_ids:
                 try:
-                    await _pty_manager.kill(session_id)
+                    await _terminate_execution(session_id)
                 except Exception:
                     pass
-        # Also tear down any driver-backed (Codex/tmux) sessions for these ids.
-        if _driver_manager is not None:
-            for session_id in req.session_ids:
-                if session_id in app.state.driver_sessions:
-                    try:
-                        await _driver_manager.kill(session_id)
-                    except Exception:
-                        pass
-                    app.state.driver_sessions.discard(session_id)
+        app.state.driver_sessions.difference_update(req.session_ids)
 
         # Map of session_id -> resolved file path for files that pass safety
         # checks and should be unlinked AFTER the DB transaction commits.
@@ -2545,22 +2522,23 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
             cwd_override=req.cwd,
             permission_mode_override=req.permission_mode,
         )
-        # Driver-backed providers (Codex) route to the DriverManager instead of
-        # the Claude direct-PTY path. Gate on effective can_send so a read-only
+        # Resolve provider input policy before entering the shared manager. Gate on effective can_send so a read-only
         # / non-drivable Codex session 409s here rather than bringing a live
         # process up (until caps flip in 4e this is always a 409 for Codex).
         provider = await _resolve_provider(req.session_id)
         driver_new_chat = req.new_chat or resolved_new_chat
         if _driver_supports(provider):
             _require_capability(provider, "can_send")
-            if _driver_manager is None:
-                raise HTTPException(status_code=503, detail="driver manager not ready")
+            if _pty_manager is None:
+                raise HTTPException(
+                    status_code=503, detail="execution manager not ready"
+                )
             # A brand-new driver chat has no rollout to resume — spawn fresh
             # (resume_uuid=None). The CLI (codex) mints its OWN rollout UUID on
             # the first message; we adopt it below so the placeholder id is
             # replaced by the real, persisted session.
             adopt_after_ts = time.time() - 2.0
-            await _driver_manager.focus(
+            await _pty_manager.focus(
                 req.session_id,
                 provider=provider,
                 cwd=cwd,
@@ -2643,19 +2621,21 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
                     f"{_detail.cwd}. Cannot deliver the message."
                 ),
             )
-        # Driver-backed providers (Codex) submit through the DriverManager.
+        # Driver-backed providers (Codex) submit through the Codex execution policy.
         # Gate on effective can_send: a read-only / no-tmux Codex session 409s
         # here instead of falling through and wrongly spawning a *claude* PTY
         # against the Codex cwd (the read-only-honesty bug). Until caps flip in
         # 4e this is always a 409 for Codex.
         # Resolve provider via the pending-aware helper so a brand-new Codex
-        # chat (no on-disk detail yet) still routes to the DriverManager instead
+        # chat (no on-disk detail yet) still routes to the Codex execution policy instead
         # of falling through to the Claude PTY path.
         provider = await _resolve_provider(req.session_id)
         if _driver_supports(provider):
             _require_capability(provider, "can_send")
-            if _driver_manager is None:
-                raise HTTPException(status_code=503, detail="driver manager not ready")
+            if _pty_manager is None:
+                raise HTTPException(
+                    status_code=503, detail="execution manager not ready"
+                )
             if _detail is not None:
                 cwd = _detail.cwd or str(Path(_detail.file_path).parent)
                 driver_new_chat = False
@@ -2665,7 +2645,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
                 cwd = pending.cwd if pending is not None else os.getcwd()
                 driver_new_chat = pending is not None
             adopt_after_ts = time.time() - 2.0
-            await _driver_manager.focus(
+            await _pty_manager.focus(
                 req.session_id,
                 provider=provider,
                 cwd=cwd,
@@ -2678,7 +2658,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
                 asyncio.ensure_future(
                     _adopt_codex_session(req.session_id, cwd, adopt_after_ts)
                 )
-            await _driver_manager.submit(req.session_id, req.content)
+            await _pty_manager.submit(req.session_id, req.content)
             return {"ok": True}
         # Lazily ensure focus. The frontend wires onFocus on the chat input
         # but that doesn't always fire (autofocus on mount, programmatic
@@ -2769,39 +2749,47 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
         return {"ok": True}
 
     def _is_driver_session(session_id: str) -> bool:
-        """True if this session is currently routed to the DriverManager."""
+        """True for a session using the Codex provider policy."""
         return session_id in app.state.driver_sessions
+
+    async def _terminate_execution(session_id: str) -> None:
+        if _pty_manager.has(session_id):
+            await _pty_manager.kill(session_id)
+            return
+        _, cwd, _, _, jsonl_path = await _resolve_pty_focus_params(session_id)
+        provider = await _resolve_provider(session_id)
+        await _pty_manager.kill(
+            session_id, provider=provider, cwd=cwd, jsonl_path=jsonl_path
+        )
 
     @app.post("/api/pty/kill")
     async def pty_kill(req: _PtyKillRequest):
-        if _is_driver_session(req.session_id) and _driver_manager is not None:
-            await _driver_manager.kill(req.session_id)
-            app.state.driver_sessions.discard(req.session_id)
-            return {"ok": True}
-        await _pty_manager.kill(req.session_id)
+        try:
+            await _terminate_execution(req.session_id)
+        except PtyOwnershipConflict as exc:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "kind": "pty_ownership_conflict",
+                    "foreign_pids": exc.foreign_pids,
+                },
+            )
+        app.state.driver_sessions.discard(req.session_id)
         return {"ok": True}
 
     @app.get("/api/pty/native-snapshot")
     async def pty_native_snapshot(session_id: str = Query(...)):
         try:
-            if _is_driver_session(session_id) and _driver_manager is not None:
-                return await _driver_manager.native_snapshot(session_id)
-            return _pty_manager.native_snapshot(session_id)
+            return await _pty_manager.native_snapshot(session_id)
         except RuntimeError as exc:
             raise HTTPException(status_code=404, detail=str(exc))
 
     @app.post("/api/pty/input")
     async def pty_native_input(req: _PtyNativeInputRequest):
         try:
-            if _is_driver_session(req.session_id) and _driver_manager is not None:
-                await _driver_manager.write_raw_input(
-                    req.session_id, decode_terminal_input(req.data)
-                )
-            else:
-                await _pty_manager.write_raw_input(
-                    req.session_id,
-                    decode_terminal_input(req.data),
-                )
+            await _pty_manager.write_raw_input(
+                req.session_id, decode_terminal_input(req.data)
+            )
         except RuntimeError as exc:
             raise HTTPException(status_code=404, detail=str(exc))
         return {"ok": True}
@@ -2809,18 +2797,13 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
     @app.post("/api/pty/resize")
     async def pty_resize(req: _PtyResizeRequest):
         try:
-            if _is_driver_session(req.session_id) and _driver_manager is not None:
-                await _driver_manager.resize(req.session_id, req.rows, req.cols)
-            else:
-                await _pty_manager.resize(req.session_id, req.rows, req.cols)
+            await _pty_manager.resize(req.session_id, req.rows, req.cols)
         except RuntimeError as exc:
             raise HTTPException(status_code=404, detail=str(exc))
         return {"ok": True}
 
     @app.get("/api/pty/status")
     async def pty_status(session_id: str = Query(...)):
-        if _is_driver_session(session_id) and _driver_manager is not None:
-            return _driver_manager.status(session_id)
         return _pty_manager.status(session_id)
 
     @app.get("/api/pty/ownership/{session_id}")
@@ -2834,7 +2817,9 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
         async with Database(db_path) as db:
             detail = await db.get_session_detail(session_id)
         jsonl_path = Path(detail.file_path) if detail is not None else None
-        return _pty_manager.ownership(session_id, jsonl_path)
+        return await _pty_manager.ownership(
+            session_id, jsonl_path, cwd=detail.cwd if detail else None
+        )
 
     @app.post("/api/pty/takeover/{session_id}")
     async def pty_takeover(session_id: str):
@@ -2855,7 +2840,12 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
                 detail=f"Unknown session: {session_id}",
             )
         jsonl_path = Path(detail.file_path)
-        pids = _session_conflict_pids(session_id, jsonl_path)
+        managed_pid = await _pty_manager.managed_pane_pid(session_id, detail.cwd)
+        pids = [
+            pid
+            for pid in _session_conflict_pids(session_id, jsonl_path)
+            if pid != managed_pid
+        ]
         if not pids:
             _unlink_fresh_foreign_sidecar(jsonl_path)
             return {"ok": True, "released_pids": [], "still_held_by": []}
@@ -2881,7 +2871,11 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
         still: list[int] = list(pids)
         while time.monotonic() < end and still:
             await asyncio.sleep(0.1)
-            still = _session_conflict_pids(session_id, jsonl_path)
+            still = [
+                pid
+                for pid in _session_conflict_pids(session_id, jsonl_path)
+                if pid != managed_pid
+            ]
         if still:
             raise HTTPException(
                 status_code=409,

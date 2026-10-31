@@ -2,7 +2,8 @@
 
 A **generic** CLI driver over an isolated tmux server, parameterised by a
 ``spawn_command`` (built per-provider). It is NOT Codex-specific — the same
-class would drive ``claude`` if the optional convergence ever lands.
+class is used by the shared execution owner for Codex; Claude retains its
+channel policy with a separate raw-output capture sink.
 
 Why tmux (validated in the Phase-4 spike, 2026-06-21 against codex 0.137.0):
   * Persistence / idle-survival for free — the tmux session outlives the app
@@ -201,7 +202,13 @@ class TmuxDriver(ProviderDriver):
         safe = _SAFE_NAME.sub("_", new_session_id)
         new_tmux = f"cd_{safe}"
         if new_tmux != self._tmux_session:
-            await self._tmux("rename-session", "-t", self._tmux_session, new_tmux)
+            rc, out = await self._tmux(
+                "rename-session", "-t", self._tmux_session, new_tmux
+            )
+            if rc:
+                raise RuntimeError(
+                    f"tmux rename failed: {out.decode(errors='replace')}"
+                )
             self._tmux_session = new_tmux
             self._buffer = new_tmux
         self.session_id = new_session_id
@@ -294,20 +301,29 @@ class TmuxDriver(ProviderDriver):
             await self._tmux("kill-session", "-t", self._tmux_session)
         except Exception as exc:  # pragma: no cover — defensive
             _log.debug("tmux kill-session raised (%s): %s", self.session_id, exc)
+        await self.detach()
+
+    async def detach(self) -> None:
+        """Close/reap only our attach client; leave the tmux pane running."""
         self._detach_reader()
+        self._dead = True
+        self._close_master()
         proc = self._attach_proc
-        if proc is not None and proc.returncode is None:
+        self._attach_proc = None
+        if proc is not None:
+            if proc.returncode is None:
+                try:
+                    proc.terminate()
+                except ProcessLookupError:
+                    pass
             try:
-                proc.terminate()
                 await asyncio.wait_for(proc.wait(), timeout=2.0)
-            except (ProcessLookupError, asyncio.TimeoutError):
+            except asyncio.TimeoutError:
                 try:
                     proc.kill()
                 except ProcessLookupError:
                     pass
-        self._close_master()
-        self._attach_proc = None
-        self._dead = True
+                await proc.wait()
 
     def is_alive(self) -> bool:
         """Cheap sync liveness — is our attach client still running?

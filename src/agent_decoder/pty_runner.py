@@ -53,6 +53,7 @@ from .btw_capture import (
 from .locks import LockAlreadyHeld, LockSidecar, _lock_path_for
 from .pty_native import encode_pty_output_chunk, encode_pty_snapshot
 from .pty_screen_state import classify_screen
+from .tmux_terminal import TmuxTerminal
 
 if TYPE_CHECKING:
     from .db import Database
@@ -388,8 +389,8 @@ class _ChannelState:
     # Phase 2 — /btw ephemeral capture state.
     # ``expecting_btw_response`` is set by PtyManager.submit() when a /btw
     # input is detected.  While True every drained chunk is appended to
-    # ``btw_buffer`` (separate from the bounded ring — must be unbounded to
-    # hold a full /btw response).  When ``BTW_RESPONSE_COMPLETE_MARKER``
+    # ``btw_buffer`` (separate from screen replay, capped at OUTPUT_RING_BYTES
+    # so a missing marker cannot grow memory indefinitely). When the marker
     # appears in the buffer, PtyChannel.finalize_btw_capture() is scheduled
     # as a fire-and-forget task.  The state is reset after finalization.
     expecting_btw_response: bool = False
@@ -414,8 +415,11 @@ class PtyChannel:
         ui_endpoint: Optional[str] = None,
         db: Optional["Database"] = None,
         bus: Optional["EventBroadcaster"] = None,
+        terminal: TmuxTerminal | None = None,
     ) -> None:
         self.session_id = session_id
+        self._terminal = terminal
+        self._harness_pid: int | None = None
         self._argv = list(argv)
         self._cwd = cwd
         self._env = dict(env)
@@ -532,11 +536,20 @@ class PtyChannel:
             # ``os.setsid()`` + ``TIOCSCTTY`` in the child before exec'ing the
             # target binary. This works under both the default asyncio loop
             # and uvloop (uvloop deliberately does not run ``preexec_fn``).
+            if self._terminal is not None:
+                self._harness_pid = await self._terminal.ensure(
+                    self._argv, self._env, self._rows, self._cols
+                )
+                _OWN_CLAUDE_PIDS.add(self._harness_pid)
             wrapper_argv = [
                 sys.executable,
                 "-m",
                 "agent_decoder._pty_preexec",
-                *self._argv,
+                *(
+                    self._terminal.argv("attach-session", "-t", self._terminal.name)
+                    if self._terminal is not None
+                    else self._argv
+                ),
             ]
             proc = await asyncio.create_subprocess_exec(
                 *wrapper_argv,
@@ -556,6 +569,8 @@ class PtyChannel:
                 os.close(slave_fd)
             except OSError:
                 pass
+            if self._harness_pid is not None:
+                _OWN_CLAUDE_PIDS.discard(self._harness_pid)
             # Also drop the lock sidecar so a follow-up retry isn't
             # blocked by our orphaned lock.
             if self._lock_sidecar is not None:
@@ -594,6 +609,14 @@ class PtyChannel:
         loop = asyncio.get_running_loop()
         loop.add_reader(master_fd, self._on_readable)
         self._state.reader_registered = True
+        if self._terminal is not None:
+            try:
+                await self._terminal.start_capture(
+                    self._capture_btw_output, self._capture_gap
+                )
+            except BaseException:
+                await self.detach()
+                raise
 
     async def await_ready(self, timeout_s: float = 3.0, settle_s: float = 0.15) -> bool:
         """Block until the TUI signals it's ready to accept input.
@@ -726,6 +749,13 @@ class PtyChannel:
                     exc,
                 )
 
+        if self._terminal is None:
+            self._capture_btw_output(chunk)
+
+    def _capture_btw_output(self, chunk: bytes) -> None:
+        if len(self._state.btw_buffer) + len(chunk) > OUTPUT_RING_BYTES:
+            self._capture_gap()
+            return
         # Phase 2 — /btw ephemeral output capture. While expecting a btw
         # response, accumulate every chunk into the growable btw_buffer
         # (separate from the bounded ring so it can hold a full response).
@@ -751,6 +781,27 @@ class PtyChannel:
                         )
                     except RuntimeError:  # pragma: no cover — loop closed
                         pass
+
+    def _capture_gap(self) -> None:
+        """Never persist a plausible but incomplete /btw response."""
+        if not self._state.expecting_btw_response:
+            return
+        for task in (self._btw_finalize_task, self._btw_timeout_task):
+            if task is not None and not task.done():
+                task.cancel()
+        self._publish_submit_completed(
+            kind="btw",
+            status="failed",
+            input_row_id=self._state.btw_input_row_id,
+            response_row_id=None,
+        )
+        self._state.expecting_btw_response = False
+        self._state.btw_buffer.clear()
+        self._state.btw_input_row_id = None
+        try:
+            self.write(BTW_DISMISS_SEQUENCE)
+        except (RuntimeError, OSError):
+            pass
 
     def _mark_dead_from_drain(self) -> None:
         """Remove the loop reader and mark the channel dead.
@@ -1076,6 +1127,44 @@ class PtyChannel:
     # Teardown
     # ------------------------------------------------------------------
 
+    async def detach(self) -> None:
+        """Release an attach client and lock; direct PTYs must terminate."""
+        if self._terminal is None:
+            await self.kill()
+            return
+        try:
+            await self._terminal.stop_capture()
+        except Exception as exc:
+            _log.warning(
+                "pty: raw capture cleanup failed (%s): %s", self.session_id, exc
+            )
+        if self._state.reader_registered and self._state.master_fd >= 0:
+            asyncio.get_running_loop().remove_reader(self._state.master_fd)
+            self._state.reader_registered = False
+        self._state.dead = True
+        self._close_master_fd()
+        proc = self._state.proc
+        if proc is not None:
+            if proc.returncode is None:
+                try:
+                    proc.terminate()
+                except ProcessLookupError:
+                    pass
+            try:
+                await asyncio.wait_for(proc.wait(), timeout=2.0)
+            except asyncio.TimeoutError:
+                try:
+                    proc.kill()
+                except ProcessLookupError:
+                    pass
+                await proc.wait()
+            _OWN_CLAUDE_PIDS.discard(proc.pid)
+        if self._harness_pid is not None:
+            _OWN_CLAUDE_PIDS.discard(self._harness_pid)
+        if self._lock_sidecar is not None:
+            self._lock_sidecar.release()
+            self._lock_sidecar = None
+
     async def kill(self) -> None:
         """Tear the channel down: SIGINT, double-Ctrl-C, SIGKILL.
 
@@ -1090,6 +1179,13 @@ class PtyChannel:
         shutdown hang where claude blocks on a write to its now-orphaned
         controlling tty.
         """
+        if self._terminal is not None:
+            try:
+                await self._terminal.terminate()
+            finally:
+                await self.detach()
+            return
+
         if self._state.proc is None:
             # start() never completed (or kill() already ran).
             self._close_master_fd()
@@ -1299,7 +1395,11 @@ class PtyManager:
         idle_warn_s: float = DEFAULT_IDLE_WARN_S,
         blurred_idle_timeout_s: float = BLURRED_IDLE_TIMEOUT_S,
         ui_endpoint: Optional[str] = None,
+        terminal_backend: str = "direct",
+        tmux_socket: str = "agent-decoder",
     ) -> None:
+        self._terminal_backend = terminal_backend
+        self._tmux_socket = tmux_socket
         if idle_warn_s >= idle_timeout_s:
             raise ValueError(
                 f"idle_warn_s ({idle_warn_s}) must be < "
@@ -1474,6 +1574,17 @@ class PtyManager:
                     rows=rows,
                     jsonl_path=jsonl_path,
                 )
+                if (
+                    existing is not None
+                    and existing.channel.is_alive()
+                    and (
+                        existing.focus_params.bin_name != bin_name
+                        or existing.focus_params.cwd != cwd
+                        or existing.focus_params.permission_mode != permission_mode
+                    )
+                ):
+                    await existing.channel.kill()
+                    params = replace(params, new_chat=False)
                 self._last_focus[session_id] = params
                 await self._ensure_channel_locked(session_id, params)
                 self._set_active_session_locked(session_id)
@@ -1514,7 +1625,7 @@ class PtyManager:
         but only if the currently-scheduled kill is further out than that.
         Idempotent across repeated blurs."""
         managed = self._channels.get(session_id)
-        if managed is None:
+        if managed is None or managed.channel._terminal is not None:
             return
         loop = asyncio.get_running_loop()
         now_ms = _now_ms()
@@ -2024,6 +2135,23 @@ class PtyManager:
             # Inside the per-session lock so the /model write can't
             # interleave with a concurrent submit() on the same sid.
             channel.write(f"/model {model}\r".encode("utf-8"))
+            if channel._terminal is not None:
+                import json
+
+                launch = _build_argv(
+                    bin_name=new_params.bin_name,
+                    session_id=session_id,
+                    model=model,
+                    permission_mode=new_params.permission_mode,
+                    new_chat=False,
+                )
+                await channel._terminal.run(
+                    "set-option",
+                    "-t",
+                    channel._terminal.name,
+                    "@agent-decoder-launch",
+                    json.dumps(channel._terminal.launch_config(launch)),
+                )
             if settle_s > 0:
                 await asyncio.sleep(settle_s)
         return True
@@ -2157,10 +2285,10 @@ class PtyManager:
 
         for session_id, managed in items:
             try:
-                await managed.channel.kill()
+                await managed.channel.detach()
             except Exception as exc:
                 _log.warning(
-                    "pty: shutdown kill raised (session %s): %s",
+                    "pty: shutdown detach raised (session %s): %s",
                     session_id,
                     exc,
                 )
@@ -2186,7 +2314,7 @@ class PtyManager:
             # idempotent and safe to call after the drain has already
             # marked it dead.
             try:
-                await managed.channel.kill()
+                await managed.channel.detach()
             except Exception as exc:
                 _log.warning(
                     "pty: cleanup of dead channel raised (session %s): %s",
@@ -2217,6 +2345,11 @@ class PtyManager:
             ui_endpoint=self._ui_endpoint,
             db=self._db,
             bus=self._bus,
+            terminal=(
+                TmuxTerminal(session_id, params.cwd, socket_name=self._tmux_socket)
+                if self._terminal_backend == "tmux" and TmuxTerminal.available()
+                else None
+            ),
         )
         try:
             await channel.start()
@@ -2291,6 +2424,8 @@ class PtyManager:
         if managed is None:
             return
         self._cancel_idle_timers(managed)
+        if managed.channel._terminal is not None:
+            return
 
         loop = asyncio.get_running_loop()
         now_ms = _now_ms()

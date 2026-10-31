@@ -164,3 +164,55 @@ See [`SECURITY.md`](SECURITY.md) for the disclosure process and full scope.
   pre-warmed in the background after first paint.
 - **GZip middleware.** FastAPI compresses JSON responses over a few hundred
   bytes, which keeps session-detail payloads small on large conversations.
+
+### Shared interactive execution
+
+`ExecutionManager` is the single server owner of Claude and Codex terminals.
+It shares the session lock table, active Native terminal, sizing configuration,
+and shutdown lifecycle. `pty_runner.PtyManager` supplies Claude's established
+input policy (ownership, input acknowledgments/watchdog, `/model`, permissions,
+and ephemeral `/btw` capture); `driver_manager.DriverSessionPolicy` supplies
+Codex's launch/resume, state polling, and rollout adoption. Neither policy is
+instantiated as another manager. The former `DriverManager` import resolves to
+`ExecutionManager` for compatibility. Native input, resize, snapshot, status,
+and termination routes all use the same owner. Provider capability checks still
+run before focus/submit; read-only providers cannot acquire a terminal.
+
+Both providers use the isolated `agent-decoder` tmux socket by default.
+`AGENT_DECODER_TMUX_SOCKET` overrides it for isolated installations/tests.
+Claude falls back to direct PTY when tmux is absent; internal consumers can
+explicitly request `terminal_backend="direct"`. Codex requires tmux and retains
+its runtime capability gate. Claude launch environments use a private temporary
+file consumed and unlinked before exec; secrets do not appear in launch argv or
+tmux metadata.
+
+Normal server shutdown **detaches** attach clients, stops local watchdogs and
+capture readers, releases server-owned Claude sidecars, and leaves tmux harnesses
+running. Browser disconnect/idle does not reap tmux harnesses. Explicit kill
+**terminates** the harness; kill also resolves a persistent terminal after a
+server restart without spawning or first focusing it. Direct PTY cannot detach
+and therefore terminates on shutdown. Claude reattachment checks session/cwd
+metadata against the pane PID plus the OS process start identity and executable.
+A changed process or a fresh foreign sidecar prevents adoption. Binary,
+permission, or model configuration changes require a verified owned respawn;
+live `/model` updates the persisted launch configuration. These checks coordinate
+same-user processes, not mutually untrusted users sharing a tmux server.
+
+Tmux redraws terminal output, which is suitable for Native hydration but changes
+the escape sequences Claude's `/btw` parser needs. Claude therefore also uses
+`pipe-pane` into a private Unix datagram receiver for the original byte stream.
+The relay drains without waiting for the application; datagrams and receiver
+work per loop turn are bounded. Sequence gaps or capture-buffer overflow fail
+the pending ephemeral response instead of persisting partial text. A capture
+owner token prevents an old client from stopping a replacement relay. Detach
+removes the local socket and stops its relay; after a crash an orphaned relay
+keeps draining/dropping until reattachment replaces it.
+
+Limitations: pending ephemeral `/btw` output is not recovered across a server
+crash/restart, and output during detach is not retained as a raw byte history;
+reattachment hydrates the tmux screen while JSONL remains the content source.
+A crashed process may leave a private temporary socket directory until OS temp
+cleanup. Deliberately replacing/execing a managed pane into a different executable
+requires explicit recovery rather than automatic ownership adoption. Real
+provider auth/network smoke tests remain opt-in; behavioral tests use synthetic
+CLIs and unique tmux sockets.
