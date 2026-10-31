@@ -289,3 +289,120 @@ async def test_old_capture_detach_cannot_disable_replacement_capture(terminal_se
         if replacement:
             await replacement.stop_capture()
         await manager.shutdown()
+
+
+@requires_tmux
+async def test_durable_run_survives_synthetic_tmux_restart_and_kill(
+    terminal_setup, tmp_path
+):
+    from agent_decoder.db import Database
+
+    _, params = terminal_setup
+    sid = str(uuid.uuid4())
+    async with Database(tmp_path / "history.db") as db:
+        await db.init_schema()
+        first = ExecutionManager(db, EventBroadcaster())
+        second = ExecutionManager(db, EventBroadcaster())
+        await first.initialize_runs()
+        try:
+            await first.focus(sid, **params)
+            run_id = (await first.runs.active(sid)).id
+            await first.submit(sid, "synthetic prompt")
+            assert (await first.runs.active(sid)).state == "running"
+            await first.shutdown()
+            assert (await first.runs.active(sid)).provenance == "server_shutdown"
+            await second.initialize_runs()
+            assert (await second.runs.active(sid)).provenance == "server_restart"
+            await second.focus(sid, **{**params, "new_chat": False})
+            assert (await second.runs.active(sid)).id == run_id
+            await second.kill(sid)
+            run = (await second.runs.list())[0]
+            assert run.id == run_id and run.state == "canceled" and run.ended_at
+        finally:
+            await first.shutdown()
+            await second.kill(sid)
+            await second.shutdown()
+
+
+@requires_tmux
+async def test_durable_attempt_changes_on_permission_respawn(terminal_setup, tmp_path):
+    from agent_decoder.db import Database
+
+    _, params = terminal_setup
+    sid = str(uuid.uuid4())
+    async with Database(tmp_path / "history.db") as db:
+        await db.init_schema()
+        manager = ExecutionManager(db, EventBroadcaster())
+        await manager.initialize_runs()
+        try:
+            await manager.focus(sid, **params)
+            first = await manager.runs.active(sid)
+            await manager.focus(sid, **{**params, "permission_mode": "default"})
+            second = await manager.runs.active(sid)
+            assert second.id != first.id
+            rows = await manager.runs.list()
+            old = next(r for r in rows if r.id == first.id)
+            assert old.state == "blocked" and old.ended_at
+            assert old.provenance == "process_replaced"
+        finally:
+            await manager.kill(sid)
+            await manager.shutdown()
+
+
+@requires_tmux
+async def test_durable_capture_failure_preserves_surviving_attempt(
+    terminal_setup, tmp_path, monkeypatch
+):
+    from agent_decoder.db import Database
+
+    _, params = terminal_setup
+    sid = str(uuid.uuid4())
+    async with Database(tmp_path / "history.db") as db:
+        await db.init_schema()
+        manager = ExecutionManager(db, EventBroadcaster())
+        await manager.initialize_runs()
+        original = TmuxTerminal.start_capture
+
+        async def broken(self, *args):
+            raise RuntimeError("synthetic capture failure")
+
+        try:
+            monkeypatch.setattr(TmuxTerminal, "start_capture", broken)
+            with pytest.raises(RuntimeError, match="synthetic capture failure"):
+                await manager.focus(sid, **params)
+            run = await manager.runs.active(sid)
+            assert run is not None and run.state == "blocked" and not run.ended_at
+            monkeypatch.setattr(TmuxTerminal, "start_capture", original)
+            await manager.focus(sid, **params)
+            assert (await manager.runs.active(sid)).id == run.id
+        finally:
+            await manager.kill(sid)
+            await manager.shutdown()
+
+
+@requires_tmux
+async def test_restart_with_changed_configuration_creates_new_attempt(
+    terminal_setup, tmp_path
+):
+    from agent_decoder.db import Database
+
+    _, params = terminal_setup
+    sid = str(uuid.uuid4())
+    async with Database(tmp_path / "history.db") as db:
+        await db.init_schema()
+        first = ExecutionManager(db, EventBroadcaster())
+        second = ExecutionManager(db, EventBroadcaster())
+        await first.initialize_runs()
+        try:
+            await first.focus(sid, **params)
+            original = await first.runs.active(sid)
+            await first.shutdown()
+            await second.initialize_runs()
+            await second.focus(sid, **{**params, "permission_mode": "default"})
+            assert (await second.runs.active(sid)).id != original.id
+            old = next(r for r in await second.runs.list() if r.id == original.id)
+            assert old.ended_at and old.provenance == "process_replaced"
+        finally:
+            await first.shutdown()
+            await second.kill(sid)
+            await second.shutdown()

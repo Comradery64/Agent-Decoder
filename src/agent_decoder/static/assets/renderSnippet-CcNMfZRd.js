@@ -1,0 +1,1 @@
+import{r as e}from"./rolldown-runtime-QTnfLwEv.js";import{i as t,t as n}from"./react-CCIEwYL0.js";var r=e(t(),1),i=n();function a(e){return e.split(/<b>|<\/b>/).map((e,t)=>t%2==1?(0,i.jsx)(`strong`,{children:e},t):(0,i.jsx)(r.Fragment,{children:e},t))}export{a as t};

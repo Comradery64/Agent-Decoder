@@ -1923,6 +1923,9 @@ class PtyManager:
             classification = classify_screen(
                 bytes(tail).decode("utf-8", errors="replace")
             )
+            observer = getattr(self, "_record_run_observation", None)
+            if observer is not None:
+                observer(session_id, classification.state)
             key = (classification.state, classification.decoded_input_safe)
             if self._last_native_state.get(session_id) != key:
                 self._last_native_state[session_id] = key

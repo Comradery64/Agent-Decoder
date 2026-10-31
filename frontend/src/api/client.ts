@@ -137,6 +137,8 @@ function patch<T>(path: string, body: unknown): Promise<T> {
 }
 
 export const api = {
+  getRuns: (params = "") => get<import("./types").AgentRun[]>(`/api/runs${params}`),
+  getRun: (id: string) => get<import("./types").AgentRun>(`/api/runs/${encodeURIComponent(id)}`),
   getProjects: () => get<Project[]>("/api/projects"),
   getProjectSessions: (projectId: string) =>
     get<Session[]>(`/api/projects/${encodeURIComponent(projectId)}/sessions`),

@@ -61,6 +61,7 @@ from .pty_runner import (
 )
 from .pty_native import decode_terminal_input
 from .execution_manager import ExecutionManager
+from .agent_runs import AgentRun, RunStore
 from .drivers import availability_for as _driver_availability
 from .drivers import supports_driving as _driver_supports
 from .analytics import fast as analytics_fast
@@ -783,6 +784,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
                 _bus,
                 ui_endpoint=f"http://{_ui_host}:{config.port}",
             )
+            await _pty_manager.initialize_runs()
             app.state.pty_manager = _pty_manager
             _pty_manager.set_native_cols(_state["config"].native_pty_cols)
             try:
@@ -933,6 +935,31 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
             cfg.active_profile_id = None
         save_config(cfg)
         return {"ok": True}
+
+    @app.get("/api/runs", response_model=list[AgentRun])
+    async def get_runs(
+        provider: str | None = None,
+        state: str | None = None,
+        project: str | None = None,
+        q: str = "",
+        limit: int = Query(200, ge=1, le=500),
+        offset: int = Query(0, ge=0),
+    ):
+        return await RunStore(db_path).list(
+            limit=limit,
+            offset=offset,
+            provider=provider,
+            state=state,
+            project=project,
+            q=q,
+        )
+
+    @app.get("/api/runs/{run_id}", response_model=AgentRun)
+    async def get_run(run_id: str):
+        for run in await RunStore(db_path).list(run_id=run_id, limit=1):
+            if run.id == run_id:
+                return run
+        raise HTTPException(status_code=404, detail="Run not found")
 
     @app.get("/api/projects")
     async def get_projects():

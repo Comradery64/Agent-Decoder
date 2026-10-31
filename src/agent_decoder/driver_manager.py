@@ -105,6 +105,9 @@ class DriverSessionPolicy:
                 async with self._state_poll_lock:
                     state = await driver.capture_state()
                 native_state = _STATE_TO_NATIVE.get(state, "idle_chat_input")
+                observer = getattr(self, "_record_run_observation", None)
+                if observer is not None:
+                    observer(sid, native_state)
                 key = (native_state, state == DriverState.IDLE)
                 if self._last_driver_state.get(sid) == key:
                     continue
