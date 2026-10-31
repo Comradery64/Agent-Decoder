@@ -8,6 +8,7 @@ const shortcuts = [
   { keys: "⌘O", action: "Expand / collapse all tool blocks" },
   { keys: "⌘E", action: "Toggle full tool results" },
   { keys: "⇧⌘E", action: "Toggle file explorer" },
+  { keys: "⇧⌘A", action: "Toggle artifacts panel" },
   { keys: "⌘I", action: "Toggle chat panel" },
   { keys: "⌘B", action: "Toggle sidebar" },
   { keys: "Ctrl+E", action: "Cursor to end of line (chat)" },

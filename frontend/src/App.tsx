@@ -40,6 +40,7 @@ const SearchOverlay = lazyWithRetry(searchOverlayImport);
 const HelpPopup = lazyWithRetry(() => import("./components/Sidebar/HelpPopup"));
 const ShortcutsPopup = lazyWithRetry(() => import("./components/Sidebar/ShortcutsPopup"));
 const FileViewer = lazyWithRetry(() => import("./components/FileViewer/FileViewer"));
+const ArtifactsPanel = lazyWithRetry(() => import("./components/ArtifactsPanel/ArtifactsPanel"));
 
 export default function App() {
   // Five individual selectors instead of `useAppStore()` without a selector —
@@ -275,6 +276,9 @@ export default function App() {
       } else if (e.key.toLowerCase() === "e" && e.metaKey) {
         e.preventDefault();
         useAppStore.getState().toggleResultsExpanded();
+      } else if (e.key.toLowerCase() === "a" && e.metaKey && e.shiftKey) {
+        e.preventDefault();
+        useAppStore.getState().toggleArtifacts();
       } else if (e.key.toLowerCase() === "b" && e.metaKey) {
         e.preventDefault();
         useAppStore.getState().toggleSidebar();
@@ -331,6 +335,13 @@ export default function App() {
             {chatIdFromUrl ? <ChatView /> : <Dashboard />}
           </ErrorBoundary>
         </div>
+        {chatIdFromUrl && (
+          <ErrorBoundary>
+            <React.Suspense fallback={null}>
+              <ArtifactsPanel />
+            </React.Suspense>
+          </ErrorBoundary>
+        )}
         {viewingFilePath && (
           <ErrorBoundary>
             <React.Suspense fallback={<DelayedSkeleton />}>

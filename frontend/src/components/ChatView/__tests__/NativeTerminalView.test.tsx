@@ -74,6 +74,8 @@ const { fitDimensions, configSource, fitAddonInstances, terminalInstances, MockF
     // xterm exposes a unicode service; xtermTerminal.ts sets activeVersion and
     // the Unicode11 addon registers a provider against it.
     unicode = { activeVersion: "6", register: vi.fn() };
+    // createNativeTerminal registers a CSI handler (ESC[3J guard) on the parser.
+    parser = { registerCsiHandler: vi.fn() };
 
     constructor(options: Record<string, unknown>) {
       this.options = options;

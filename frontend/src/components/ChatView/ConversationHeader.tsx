@@ -3,7 +3,7 @@ import type { PtyOwnership, Session } from "../../api/types";
 import { api } from "../../api/client";
 import { useAppStore } from "../../store";
 import { emit } from "../../utils/events";
-import { IconTerminal } from "../ui/icons";
+import { IconGallery, IconTerminal } from "../ui/icons";
 
 // Small status dot for the Phase-0 ownership badge. Inline-rendered
 // next to the model label so it doesn't disturb existing header layout.
@@ -98,6 +98,8 @@ export function ConversationHeader({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const remoteClient = useAppStore((s) => s.hostInfo?.is_remote_client === true);
   const terminalDisabled = !session || session.is_fork || remoteClient;
+  const artifactsOpen = useAppStore((s) => s.artifactsOpen);
+  const toggleArtifacts = useAppStore((s) => s.toggleArtifacts);
   const terminalTitle = session?.is_fork
     ? "Open in terminal (fork — not resumable)"
     : remoteClient
@@ -285,6 +287,24 @@ export function ConversationHeader({
               {modelLabel}
             </span>
           )}
+
+          <button
+            onClick={toggleArtifacts}
+            title="Artifacts (⇧⌘A)"
+            aria-label="Toggle artifacts panel"
+            aria-pressed={artifactsOpen}
+            style={{ ...btnBase, color: artifactsOpen ? "var(--text-primary)" : "var(--text-tertiary)" }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = "var(--text-primary)";
+              (e.currentTarget as HTMLButtonElement).style.background = "var(--bg-sidebar-hover)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = artifactsOpen ? "var(--text-primary)" : "var(--text-tertiary)";
+              (e.currentTarget as HTMLButtonElement).style.background = "none";
+            }}
+          >
+            <IconGallery />
+          </button>
 
           {/* Export dropdown */}
           {session && (

@@ -6,6 +6,7 @@ export const LS = {
   ARCHIVED: "clau-decode:archived",
   VIEWED_AT: "clau-decode:viewed-at",
   FILE_VIEWER_WIDTH: "clau-decode:file-viewer-width",
+  ARTIFACTS_OPEN: "clau-decode:artifacts-open",
   SIDEBAR_WIDTH: "clau-decode:sidebar-width",
   READ_SESSIONS_LEGACY: "clau-decode:read-sessions",
   // Map<sessionId, ms-since-epoch> — wall-clock of the most recent
