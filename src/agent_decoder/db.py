@@ -314,6 +314,9 @@ class Database:
     async def init_schema(self) -> None:
         """Create all tables and FTS5 virtual table if they don't exist."""
         assert self._conn is not None
+        from .agent_runs import RUN_SCHEMA
+
+        await self._conn.executescript(RUN_SCHEMA)
         await self._conn.executescript("""
             CREATE TABLE IF NOT EXISTS projects (
                 id TEXT PRIMARY KEY,
@@ -852,6 +855,23 @@ class Database:
                 session.permission_mode,
                 session.provider,
                 file_mtime,
+            ),
+        )
+        # Preserve context in durable run history when a pending/native session
+        # is indexed. No foreign key: deleting/rebuilding the index retains runs.
+        await self._conn.execute(
+            """UPDATE agent_runs SET model=coalesce(model,?),project_id=coalesce(project_id,?),
+               cwd=coalesce(cwd,?),git_branch=coalesce(git_branch,?),
+               is_worktree=CASE WHEN project_id IS NULL THEN ? ELSE is_worktree END
+               WHERE native_session_id=? AND provider=?""",
+            (
+                session.model,
+                session.project_id,
+                session.cwd,
+                session.git_branch,
+                int(session.is_worktree),
+                session.id,
+                session.provider,
             ),
         )
         await self._conn.commit()

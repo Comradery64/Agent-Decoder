@@ -10,10 +10,9 @@ adapters). This one answers two questions the server needs:
     availability_for(provider).available``.
   * ``build_driver(...)`` — construct a ready-to-spawn ``ProviderDriver``.
 
-v1 wires exactly one entry: ``codex → TmuxDriver(codex_spawn_builder)``. Claude
-is intentionally absent — it stays on its tuned direct-PTY path. The shape
-supports a future ``claude → TmuxDriver(claude_spawn_builder)`` opt-in with no
-rework.
+The registry wires ``codex → TmuxDriver(codex_spawn_builder)``. Claude uses
+PtyChannel policy under ExecutionManager instead, because ephemeral capture
+needs the original provider escape stream as well as rendered Native output.
 """
 
 from __future__ import annotations
@@ -49,7 +48,7 @@ _BACKENDS: dict[str, _Backend] = {
 def supports_driving(provider: str) -> bool:
     """True if a driving backend is *wired* for this provider (ignores runtime).
 
-    Distinct from availability: Claude returns False here (no backend wired),
+    Distinct from availability: Claude returns False here (uses channel policy),
     while Codex returns True even on a box without tmux — use
     ``availability_for`` for the runtime gate.
     """

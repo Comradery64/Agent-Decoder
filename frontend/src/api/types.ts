@@ -591,3 +591,25 @@ export interface DashboardData {
   total_messages: number;
   tips: DashboardTip[];
 }
+
+/** A managed execution attempt; independent of indexed session lifetime. */
+export interface AgentRun {
+  id: string;
+  provider: string;
+  native_session_id: string;
+  model: string | null;
+  project_id: string | null;
+  cwd: string | null;
+  git_branch: string | null;
+  is_worktree: boolean;
+  task_id: string | null;
+  parent_run_id: string | null;
+  state: "queued" | "starting" | "running" | "awaiting_input" | "blocked" | "completed" | "failed" | "canceled";
+  reason: string;
+  provenance: string;
+  created_at: string;
+  updated_at: string;
+  last_observed_at: string | null;
+  ended_at: string | null;
+  source_available: boolean;
+}

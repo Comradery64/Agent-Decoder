@@ -817,3 +817,75 @@ async def test_flag_endpoint_publishes_session_meta_sse_event(env_with_claude):
                     break
         assert target is not None
         assert target["archived_at"] is not None
+
+
+@pytest.fixture(autouse=True)
+def isolated_execution_socket(monkeypatch):
+    """Lifespan tests must never share the application's real tmux socket."""
+    import uuid
+    import subprocess
+
+    name = "agent-decoder-server-test-" + uuid.uuid4().hex[:12]
+    monkeypatch.setenv("AGENT_DECODER_TMUX_SOCKET", name)
+    yield
+    import shutil
+
+    if shutil.which("tmux"):
+        subprocess.run(["tmux", "-L", name, "kill-server"], capture_output=True)
+
+
+async def test_kill_after_server_restart_terminates_without_focusing(
+    tmp_path, monkeypatch
+):
+    """The kill API resolves the persistent pane even with an empty owner map."""
+    import shutil
+    import uuid
+
+    if not shutil.which("tmux"):
+        pytest.skip("requires tmux")
+    monkeypatch.setenv("TERM", "xterm-256color")
+    db_path = tmp_path / "test.db"
+    cwd = tmp_path / "cwd"
+    cwd.mkdir()
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    sid = str(uuid.uuid4())
+    file_path = projects / f"{sid}.jsonl"
+    file_path.write_text("")
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _write_shim(bin_dir)
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path / "claude_config"))
+    await _seed_session(db_path, session_id=sid, cwd=str(cwd), file_path=str(file_path))
+    config = AppConfig(data_paths=[str(tmp_path)])
+    app = _make_app(db_path, config)
+    async with app.router.lifespan_context(app):
+        async with await _client(app) as client:
+            response = await client.post(
+                "/api/pty/focus",
+                json={
+                    "session_id": sid,
+                    "cwd": str(cwd),
+                    "bin_name": "claude",
+                    "new_chat": True,
+                },
+            )
+            assert response.status_code == 200, response.text
+            terminal = app.state.pty_manager._channels[sid].channel._terminal
+    assert await terminal.exists()
+    restarted = _make_app(db_path, config)
+    async with restarted.router.lifespan_context(restarted):
+        assert not restarted.state.pty_manager.has(sid)
+        async with await _client(restarted) as client:
+            ownership = await client.get(f"/api/pty/ownership/{sid}")
+            assert ownership.json()["status"] == "ours"
+            assert ownership.json()["foreign_pids"] == []
+            takeover = await client.post(f"/api/pty/takeover/{sid}")
+            assert takeover.status_code == 200
+            assert takeover.json()["released_pids"] == []
+            assert await terminal.exists()
+            cwd.rmdir()  # Termination must not require launch-time cwd validity.
+            response = await client.post("/api/pty/kill", json={"session_id": sid})
+            assert response.status_code == 200, response.text
+    assert not await terminal.exists()

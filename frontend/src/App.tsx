@@ -34,6 +34,7 @@ const settingsModalImport = () => import("./components/Settings/SettingsModal");
 // render a reload prompt in-place instead of crashing the whole ErrorBoundary.
 const Sidebar = lazyWithRetry(() => import("./components/Sidebar/Sidebar"));
 const ChatView = lazyWithRetry(chatViewImport);
+const Runs = lazyWithRetry(() => import("./components/Runs"));
 const Dashboard = lazyWithRetry(() => import("./components/Dashboard/Dashboard"));
 const SettingsModal = lazyWithRetry(settingsModalImport);
 const SearchOverlay = lazyWithRetry(searchOverlayImport);
@@ -332,7 +333,7 @@ export default function App() {
         <Sidebar />
         <div style={{ flex: 1, display: "flex", minWidth: 200, overflow: "hidden" }}>
           <ErrorBoundary>
-            {chatIdFromUrl ? <ChatView /> : <Dashboard />}
+            {route.startsWith("/runs") ? <Runs /> : chatIdFromUrl ? <ChatView /> : <Dashboard />}
           </ErrorBoundary>
         </div>
         {chatIdFromUrl && (

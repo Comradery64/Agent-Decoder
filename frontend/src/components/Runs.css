@@ -1,0 +1,26 @@
+.runs-page { padding: 28px; overflow: auto; flex: 1; min-width: 0; color: var(--text-primary); font-family: var(--font-ui); }
+.runs-page header, .runs-filters, .runs-list, .runs-pagination, .run-detail { max-width: 1100px; margin-inline: auto; }
+.runs-page header p, .run-muted, .runs-page small, .run-detail dt { color: var(--text-secondary); }
+.runs-page h1 { font-size: 26px; margin-top: 0; }
+.runs-page h2 { font-size: 18px; margin: 0; }
+.runs-page p { line-height: 1.5; }
+.runs-page a { color: var(--text-accent); text-underline-offset: 3px; }
+.runs-filters { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; margin-block: 24px; }
+.runs-filters label { display: grid; gap: 6px; flex: 1 1 140px; font-size: 12px; }
+.runs-page input, .runs-page select, .runs-page button { font: inherit; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 8px 10px; min-height: 36px; min-width: 0; }
+.runs-page input, .runs-page select { width: 100%; box-sizing: border-box; }
+.runs-page button { cursor: pointer; }
+.runs-page button:hover:not(:disabled) { background: var(--bg-sidebar-hover); }
+.runs-page button:disabled { opacity: .45; cursor: default; }
+.runs-page :focus-visible { outline: 2px solid var(--border-accent); outline-offset: 2px; }
+.runs-list { display: grid; gap: 12px; }
+.run-card { border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 18px; overflow-wrap: anywhere; background: var(--bg-base); }
+.run-card-title { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.run-state { font-size: 12px; border: 1px solid var(--border-default); padding: 3px 8px; border-radius: 20px; }
+.run-state-blocked, .run-state-failed { color: var(--tool-error-text); }
+.run-detail { box-sizing: border-box; margin-bottom: 20px; }
+.run-detail dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 24px; }
+.run-detail dt { font-size: 12px; margin-bottom: 4px; }
+.run-detail dd { margin: 0; font-size: 13px; }
+.runs-pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding-block: 20px; }
+@media (max-width: 600px) { .runs-page { padding: 16px; } .run-card { padding: 14px; } .run-detail dl { grid-template-columns: 1fr; } }

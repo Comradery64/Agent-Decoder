@@ -6,8 +6,9 @@ spawning it, streaming its TUI bytes, sending input, and reporting state.
 
 The two are deliberately separate: decode/recall is cross-platform and always
 available, while driving depends on a runtime backend (tmux today, ConPTY
-later). v1 ships exactly one backend — ``TmuxDriver`` — and routes only Codex
-through it. Claude keeps its tuned direct-PTY path untouched.
+later). ``TmuxDriver`` supplies Codex transport. The shared execution owner
+also runs Claude through its existing channel policy on a tmux terminal, with
+a direct PTY fallback.
 
 Design constraints (see ``docs/phase4-implementation-plan.md``):
   * Transport-agnostic above the backend: no tmux assumptions leak into this
@@ -112,6 +113,13 @@ class ProviderDriver(abc.ABC):
         """
         ...
 
+    async def detach(self) -> None:
+        """Release local resources; persistent backends keep the harness alive.
+
+        Nonpersistent backends may terminate because they cannot detach.
+        """
+        await self.kill()
+
     @abc.abstractmethod
     def is_alive(self) -> bool:
         """Return True if the driven session is still running.
@@ -156,6 +164,10 @@ class ProviderDriver(abc.ABC):
         runs inside the reader loop and MUST NOT block or raise.
         """
         ...
+
+    def set_on_dead(self, cb: Callable[[], None] | None) -> None:
+        """Update the death callback after a session adopts its durable id."""
+        self._on_dead = cb
 
     # -- Sizing & state -------------------------------------------------------
 
