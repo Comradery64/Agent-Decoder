@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.
 
 ## [Unreleased]
 
+## [0.3.6] - 2026-11-06
+
+### Added
+
+- **Durable agent runs and a cross-provider Runs screen** (#52). Each managed execution attempt is recorded in an `agent_runs` table that is independent of the rebuildable session index; no screen or exit code is treated as proof of completion. Read it at `GET /api/runs` and `GET /api/runs/{id}`.
+- **Unified Claude and Codex execution ownership** with persistent tmux terminals (#51), so both providers share one execution manager.
+- **Artifacts panel** listing a session's images and written files.
+
+### Changed
+
+- Share one syntax highlighter and cache rendered markdown, and toggle the artifacts panel without re-rendering the chat.
+- Local agent and handoff files (`.handoff/`, `.claude/`, `CLAUDE.md`, ...) are excluded from sdist builds and gitignored.
+
+### Fixed
+
+- Native terminal no longer snaps back to the bottom and wipes scrollback when a full-screen clear (`ESC[3J`) arrives while you are scrolled up. A real `/clear` at the bottom still clears. An ignored sequence is logged to the browser console (`agent-decoder: ignored ESC[3J …`) so the cause can be confirmed in real use.
+
 ## [0.3.5] - 2026-10-24
 
 ### Changed
@@ -253,7 +270,8 @@ Initial public release.
 
 - License changed from MIT to [FSL-1.1-Apache-2.0](LICENSE). All prior unreleased history was developed under MIT; the 0.1.0 release and everything after it ship under FSL-1.1-Apache-2.0, which converts to Apache 2.0 two years after each release.
 
-[Unreleased]: https://github.com/Comradery64/Agent-Decoder/compare/v0.3.5...HEAD
+[Unreleased]: https://github.com/Comradery64/Agent-Decoder/compare/v0.3.6...HEAD
+[0.3.6]: https://github.com/Comradery64/Agent-Decoder/compare/v0.3.5...v0.3.6
 [0.3.5]: https://github.com/Comradery64/Agent-Decoder/compare/v0.3.2...v0.3.5
 [0.3.2]: https://github.com/Comradery64/Agent-Decoder/compare/v0.3.1.3...v0.3.2
 [0.3.1.2]: https://github.com/Comradery64/Agent-Decoder/compare/v0.3.1.1...v0.3.1.2
