@@ -928,6 +928,36 @@ class Database:
             return None
         return row["file_mtime"]
 
+    async def get_indexed_file_mtime(
+        self, stem: str, file_path: str
+    ) -> tuple[bool, Optional[float]]:
+        """Look up the stored mtime for a file as ``(row_found, mtime)``.
+
+        Considers every row that describes the file: the one whose id is the
+        file stem, and any whose stored ``file_path`` is this file. (Codex
+        rollouts are named ``rollout-<timestamp>-<uuid>`` but are indexed under
+        the id inside the file; an older adapter keyed some by file name, leaving
+        a stale orphan row beside the current one.)
+
+        ``row_found`` distinguishes "no row describes this file" from "a row
+        exists but its mtime was deliberately NULLed to force a re-parse". A NULL
+        on ANY matching row wins (invalidation must always trigger a re-parse);
+        otherwise the freshest stored mtime is returned, since a stale orphan
+        row must not make an up-to-date file look changed.
+        """
+        assert self._conn is not None
+        async with self._conn.execute(
+            "SELECT file_mtime FROM sessions WHERE id = ? OR file_path = ?",
+            (stem, file_path),
+        ) as cursor:
+            rows = await cursor.fetchall()
+        if not rows:
+            return False, None
+        mtimes = [r["file_mtime"] for r in rows]
+        if any(m is None for m in mtimes):
+            return True, None
+        return True, max(mtimes)
+
     async def get_session_file_path(self, session_id: str) -> Optional[str]:
         """Return the JSONL file path for a session, or None if not indexed."""
         assert self._conn is not None

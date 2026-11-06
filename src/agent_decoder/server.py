@@ -516,6 +516,35 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
 
         await db.merge_messages(messages)
 
+    # mtime each file had when it was last indexed, keyed by absolute path. Only
+    # used for NON-Claude providers, and only as a fallback for files no sessions
+    # row describes: several Codex rollouts of one resumed session share a single
+    # row, so the stored file_path/mtime can only describe one of them and the
+    # rest would otherwise look "new" and be re-parsed on every rescan. The DB
+    # stays authoritative wherever it has a row, so deliberate invalidation
+    # (file_mtime = NULL) still forces a re-parse.
+    _indexed_mtimes: dict[str, float] = {}
+
+    async def _stored_mtime(
+        db: Database, session_path: Path, provider: str
+    ) -> float | None:
+        if provider == "claude":
+            # Claude: session id == file stem. Behaviour deliberately unchanged
+            # (the editor's .bak. copies and patch flow lean on it).
+            return await db.get_session_mtime(session_path.stem)
+        # Codex rollouts are named rollout-<timestamp>-<uuid> but indexed under
+        # the id inside the file, so the stem never matches: look up by path.
+        found, mtime = await db.get_indexed_file_mtime(
+            session_path.stem, str(session_path)
+        )
+        if found:
+            return mtime
+        return _indexed_mtimes.get(str(session_path))
+
+    def _remember_mtime(session_path: Path, provider: str, mtime: float) -> None:
+        if provider != "claude":
+            _indexed_mtimes[str(session_path)] = mtime
+
     async def do_scan(db: Database) -> int:
         """Scan all configured paths and upsert new / changed sessions into DB.
 
@@ -549,7 +578,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
                         await asyncio.sleep(0)
                         continue
                     current_mtime = session_path.stat().st_mtime
-                    stored_mtime = await db.get_session_mtime(session_path.stem)
+                    stored_mtime = await _stored_mtime(db, session_path, adapter.name)
                     if stored_mtime == current_mtime:
                         continue
                     file_size = session_path.stat().st_size
@@ -566,6 +595,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
                             await db.upsert_project(project)
                             await db.upsert_session(session, file_mtime=current_mtime)
                             changed += 1
+                        _remember_mtime(session_path, adapter.name, current_mtime)
                         continue
                     session, messages = await asyncio.to_thread(
                         adapter.parse, session_path
@@ -575,6 +605,7 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
                     await db.upsert_project(project)
                     await db.upsert_session(session, file_mtime=current_mtime)
                     await db.upsert_messages(messages)
+                    _remember_mtime(session_path, adapter.name, current_mtime)
                     changed += 1
                     await asyncio.sleep(0)
                 except Exception as exc:
@@ -614,16 +645,17 @@ def create_app(config: AppConfig, db_path: Path) -> FastAPI:
             root_path = project_dir.parent.parent  # <root>/projects/<proj>/<session>
             project = build_project_from_dir(project_dir.name, str(root_path))
             current_mtime = session_path.stat().st_mtime
-            stored_mtime = await db.get_session_mtime(session_path.stem)
+            adapter = registry.adapter_for_path(session_path) or registry.get("claude")
+            stored_mtime = await _stored_mtime(db, session_path, adapter.name)
             if stored_mtime == current_mtime:
                 return
-            adapter = registry.adapter_for_path(session_path) or registry.get("claude")
             session, messages = await asyncio.to_thread(adapter.parse, session_path)
             session.project_id = project.id
             project.session_count += 1
             await db.upsert_project(project)
             await db.upsert_session(session, file_mtime=current_mtime)
             await db.upsert_messages(messages)
+            _remember_mtime(session_path, adapter.name, current_mtime)
         except Exception as exc:
             print(f"Warning: skipping {session_path}: {exc}")
 
