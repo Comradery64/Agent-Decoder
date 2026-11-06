@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.
 ### Fixed
 
 - **Periodic rescan no longer re-parses every Codex transcript each minute.** Codex rollouts are named `rollout-<timestamp>-<uuid>` but indexed under the session id inside the file, so the "has this file changed?" lookup by file name missed most of them and the server re-parsed gigabytes of unchanged transcripts on every pass (a ~14 s CPU spike every 60 s, plus `message_count` reset to 0 on large rollouts). Unchanged files are now skipped by path, including rollouts that share a session id.
+- Dangling symlinks under `~/.claude/projects` are skipped quietly instead of logging a "No such file" warning on every rescan.
 - Native terminal no longer snaps back to the bottom and wipes scrollback when a full-screen clear (`ESC[3J`) arrives while you are scrolled up. A real `/clear` at the bottom still clears. An ignored sequence is logged to the browser console (`agent-decoder: ignored ESC[3J …`) so the cause can be confirmed in real use.
 
 ## [0.3.5] - 2026-10-24
