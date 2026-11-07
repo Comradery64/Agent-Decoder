@@ -88,6 +88,16 @@ def build_project_from_dir(dir_name: str, data_source: str) -> Project:
     )
 
 
+def _is_dangling(path: Path) -> bool:
+    """True for a symlink whose target no longer exists (stat() would raise)."""
+    try:
+        return path.is_symlink() and not path.exists()
+    except OSError:
+        # Vanished (or unreadable) mid-scan: not our case to skip quietly; the
+        # caller's per-file error handling deals with it, as it always did.
+        return False
+
+
 async def scan_paths(
     root_paths: list[Path], include_subagents: bool = False
 ) -> AsyncIterator[tuple[Project, Path]]:
@@ -128,12 +138,14 @@ async def scan_paths(
             project = build_project_from_dir(project_dir.name, str(root_path))
 
             for jsonl_file in sorted(
-                f for f in project_dir.glob("*.jsonl") if ".bak." not in f.name
+                f
+                for f in project_dir.glob("*.jsonl")
+                if ".bak." not in f.name and not _is_dangling(f)
             ):
                 yield project, jsonl_file
 
             if include_subagents:
                 for jsonl_file in sorted(project_dir.glob("*/subagents/*.jsonl")):
-                    if ".bak." in jsonl_file.name:
+                    if ".bak." in jsonl_file.name or _is_dangling(jsonl_file):
                         continue
                     yield project, jsonl_file

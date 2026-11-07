@@ -33,6 +33,23 @@ class TestScanPaths:
             results.append((project, path))
         assert len(results) == 3
 
+    async def test_skips_dangling_symlinks(self, fake_claude_dir):
+        # A symlinked transcript whose target is gone must be skipped at
+        # discovery, not yielded (it used to log a "Warning: skipping ... No such
+        # file" line on every periodic rescan, for every dangling link).
+        from agent_decoder.scanner import scan_paths
+
+        proj = fake_claude_dir / "projects" / "-Users-alice-project-foo"
+        (proj / "dangling.jsonl").symlink_to(fake_claude_dir / "gone" / "x.jsonl")
+        (proj / "aaaaaaaa-0000-0000-0000-000000000003.jsonl").symlink_to(
+            proj / "aaaaaaaa-0000-0000-0000-000000000001.jsonl"
+        )  # a LIVE symlink must still be found
+
+        names = {p.name async for _, p in scan_paths([fake_claude_dir])}
+        assert "dangling.jsonl" not in names
+        assert "aaaaaaaa-0000-0000-0000-000000000003.jsonl" in names
+        assert len(names) == 4  # 3 originals + the live symlink
+
     async def test_yields_correct_project_ids(self, fake_claude_dir):
         from agent_decoder.scanner import scan_paths
 
